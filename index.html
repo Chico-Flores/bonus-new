@@ -519,7 +519,6 @@
                 </div>
 
                 <div class="summary-stats" id="summaryStats">
-                    <!-- Stats will be populated by JavaScript -->
                 </div>
 
                 <div class="results-table">
@@ -534,7 +533,6 @@
                             </tr>
                         </thead>
                         <tbody id="resultsBody">
-                            <!-- Results will be populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -556,7 +554,6 @@
         let agentData = {};
         let payPeriodData = {};
 
-        // Bonus structures
         const bonusStructures = {
             mexico: [
                 { min: 500, max: 999, bonus: 25 },
@@ -576,25 +573,22 @@
             ]
         };
 
-        // Team selection
         document.querySelectorAll('.team-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 selectedTeam = this.dataset.team;
+                console.log('Team selected:', selectedTeam);
             });
         });
 
-        // File upload
         document.getElementById('fileInput').addEventListener('change', handleFile);
 
-        // Agent selector
         document.getElementById('agentSelect').addEventListener('change', function() {
             const downloadBtn = document.getElementById('downloadIndividualBtn');
             downloadBtn.disabled = !this.value;
         });
 
-        // Download buttons
         document.getElementById('downloadIndividualBtn').addEventListener('click', function() {
             const selectedAgent = document.getElementById('agentSelect').value;
             if (selectedAgent) {
@@ -604,7 +598,6 @@
 
         document.getElementById('downloadAllBtn').addEventListener('click', downloadAllReports);
 
-        // Drag and drop
         const uploadSection = document.getElementById('uploadSection');
         uploadSection.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -627,7 +620,7 @@
         function handleFile(event) {
             const file = event.target.files[0];
             if (file) {
-                document.getElementById('fileName').textContent = `Selected: ${file.name}`;
+                document.getElementById('fileName').textContent = 'Selected: ' + file.name;
                 document.getElementById('fileName').style.display = 'block';
                 processFile(file);
             }
@@ -639,6 +632,7 @@
                 return;
             }
 
+            console.log('Processing file:', file.name);
             document.getElementById('loading').style.display = 'block';
             document.getElementById('resultsSection').style.display = 'none';
             document.getElementById('individualDownloadSection').style.display = 'none';
@@ -652,7 +646,7 @@
                     window.currentWorkbook = workbook;
                     calculateBonuses();
                 } catch (error) {
-                    alert('Error reading file. Please make sure it\'s a valid Excel file.');
+                    alert('Error reading file. Please make sure it is a valid Excel file.');
                     console.error(error);
                     document.getElementById('loading').style.display = 'none';
                 }
@@ -672,7 +666,6 @@
                 const sheet = workbook.Sheets[sheetName];
                 const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
                 
-                // Find the header row (contains "Pmt Amt")
                 let headerRowIndex = -1;
                 let headerRow = [];
                 
@@ -690,13 +683,11 @@
                 const accountIndex = headerRow.findIndex(cell => cell && cell.toString().includes('Account #'));
                 const dateIndex = headerRow.findIndex(cell => cell && cell.toString().includes('Pmt Date'));
                 
-                // Extract agent from sheet name or row 1
                 let agent = '';
                 if (jsonData[1] && jsonData[1][0]) {
                     agent = jsonData[1][0].toString().trim();
                 }
 
-                // Extract pay period from row under agent name (row 2)
                 let payPeriod = '';
                 if (jsonData[2] && jsonData[2][0]) {
                     payPeriod = jsonData[2][0].toString().trim();
@@ -707,7 +698,6 @@
                     agentData[agent] = [];
                 }
                 
-                // Process data rows
                 for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
                     const row = jsonData[i];
                     if (!row || row.length === 0) continue;
@@ -777,1697 +767,332 @@
             const resultsBody = document.getElementById('resultsBody');
 
             resultsSection.style.display = 'block';
-            teamResults.textContent = `Results for ${selectedTeam.toUpperCase()} Team`;
+            teamResults.textContent = 'Results for ' + selectedTeam.toUpperCase() + ' Team';
 
             const totalBonuses = calculatedBonuses.reduce((sum, item) => sum + item.bonusAmount, 0);
             const totalPayments = calculatedBonuses.reduce((sum, item) => sum + item.paymentAmount, 0);
-            const uniqueAgents = new<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE POWERHOUZE GROUP - Bonus Calculator</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+            const uniqueAgents = new Set(calculatedBonuses.map(item => item.agent)).size;
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #fbbf24 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(90deg, #1e40af, #3b82f6);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            position: relative;
-        }
-
-        .header::before {
-            content: "⚡";
-            position: absolute;
-            left: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 2rem;
-            color: #fbbf24;
-        }
-
-        .header::after {
-            content: "⚡";
-            position: absolute;
-            right: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 2rem;
-            color: #fbbf24;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
-
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .main-content {
-            padding: 40px;
-        }
-
-        .team-selector {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .team-selector h2 {
-            color: #1e40af;
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-            font-weight: bold;
-        }
-
-        .team-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .team-btn {
-            background: white;
-            border: 3px solid #1e40af;
-            color: #1e40af;
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .team-btn:hover {
-            background: #1e40af;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .team-btn.active {
-            background: #1e40af;
-            color: white;
-            box-shadow: 0 10px 20px rgba(30, 64, 175, 0.3);
-        }
-
-        .team-btn::before {
-            content: "⚡";
-            margin-right: 8px;
-            color: #fbbf24;
-        }
-
-        .upload-section {
-            border: 3px dashed #3b82f6;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 30px;
-            background: #f8fafc;
-            transition: all 0.3s ease;
-        }
-
-        .upload-section:hover {
-            background: #f1f5f9;
-            border-color: #1e40af;
-        }
-
-        .upload-section.dragover {
-            background: #dbeafe;
-            border-color: #1e40af;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .upload-btn {
-            background: linear-gradient(135deg, #3b82f6, #1e40af);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .upload-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
-        }
-
-        .bonus-structures {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .structure-card {
-            background: #f8fafc;
-            border-radius: 15px;
-            padding: 25px;
-            border: 2px solid #e2e8f0;
-        }
-
-        .structure-card h3 {
-            color: #1e40af;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            text-align: center;
-        }
-
-        .structure-card.mexico {
-            border-color: #fbbf24;
-            background: linear-gradient(135deg, #fffbeb, #fef3c7);
-        }
-
-        .structure-card.opac {
-            border-color: #3b82f6;
-            background: linear-gradient(135deg, #eff6ff, #dbeafe);
-        }
-
-        .bracket {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid #3b82f6;
-        }
-
-        .mexico .bracket {
-            border-left-color: #fbbf24;
-        }
-
-        .results-section {
-            display: none;
-            margin-top: 30px;
-        }
-
-        .results-header {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .summary-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            border: 2px solid #e2e8f0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #1e40af;
-        }
-
-        .stat-label {
-            color: #64748b;
-            margin-top: 5px;
-        }
-
-        .results-table {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #1e40af;
-            color: white;
-            padding: 15px;
-            text-align: left;
-            font-weight: bold;
-        }
-
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        tr:hover {
-            background: #f8fafc;
-        }
-
-        .bonus-amount {
-            font-weight: bold;
-            color: #059669;
-        }
-
-        .download-section {
-            margin-top: 30px;
-            text-align: center;
-        }
-
-        .download-btn {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #1e40af;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            margin: 10px;
-        }
-
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
-        }
-
-        .individual-download-section {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
-            display: none;
-        }
-
-        .individual-download-section h3 {
-            color: white;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
-        .agent-selector {
-            margin-bottom: 20px;
-        }
-
-        .agent-selector select {
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: 2px solid #059669;
-            font-size: 1.1rem;
-            margin-right: 15px;
-            background: white;
-            color: #1e40af;
-            font-weight: bold;
-        }
-
-        .individual-btn {
-            background: white;
-            color: #059669;
-            border: 3px solid white;
-            padding: 12px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            margin: 5px;
-        }
-
-        .individual-btn:hover {
-            background: #059669;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .individual-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .file-name {
-            margin-top: 15px;
-            color: #059669;
-            font-weight: bold;
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .bonus-structures {
-                grid-template-columns: 1fr;
-            }
-            
-            .team-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>THE POWERHOUZE GROUP</h1>
-            <p>Agent Bonus Calculator</p>
-        </div>
-
-        <div class="main-content">
-            <div class="team-selector">
-                <h2>Select Team for Bonus Calculation</h2>
-                <div class="team-buttons">
-                    <button class="team-btn" data-team="mexico">Mexico Team</button>
-                    <button class="team-btn" data-team="opac">OPAC Team (Egypt/Philippines)</button>
-                </div>
-            </div>
-
-            <div class="bonus-structures">
-                <div class="structure-card mexico">
-                    <h3>⚡ Mexico Team Bonuses</h3>
-                    <div class="bracket">
-                        <span>$500 - $999</span>
-                        <span><strong>$25</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$1,000 - $1,999</span>
-                        <span><strong>$50</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$2,000 - $3,999</span>
-                        <span><strong>$100</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$4,000+</span>
-                        <span><strong>$200</strong></span>
-                    </div>
-                </div>
-
-                <div class="structure-card opac">
-                    <h3>⚡ OPAC Team Bonuses</h3>
-                    <div class="bracket">
-                        <span>$500 - $999</span>
-                        <span><strong>$5</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$1,000 - $1,499</span>
-                        <span><strong>$10</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$1,500 - $1,999</span>
-                        <span><strong>$15</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$2,000 - $2,499</span>
-                        <span><strong>$20</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$2,500 - $2,999</span>
-                        <span><strong>$25</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$3,000 - $3,499</span>
-                        <span><strong>$30</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$3,500 - $3,999</span>
-                        <span><strong>$35</strong></span>
-                    </div>
-                    <div class="bracket">
-                        <span>$4,000+</span>
-                        <span><strong>$40</strong></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="upload-section" id="uploadSection">
-                <h3 style="color: #1e40af; margin-bottom: 20px;">⚡ Upload Collector Commission Spreadsheet</h3>
-                <p style="color: #64748b; margin-bottom: 20px;">Select your team above, then upload the Excel file</p>
-                <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
-                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                    Choose File
-                </button>
-                <p style="margin-top: 10px; color: #64748b; font-size: 0.9rem;">Supported formats: .xlsx, .xls, .csv</p>
-                <div id="fileName" class="file-name" style="display: none;"></div>
-            </div>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>Processing your file...</p>
-            </div>
-
-            <div class="individual-download-section" id="individualDownloadSection">
-                <h3>⚡ Download Individual Agent Reports (DOCX)</h3>
-                <div class="agent-selector">
-                    <select id="agentSelect">
-                        <option value="">Select Agent...</option>
-                    </select>
-                    <button class="individual-btn" id="downloadIndividualBtn" disabled>
-                        Download Selected Agent Report
-                    </button>
-                </div>
-                <div>
-                    <button class="individual-btn" id="downloadAllBtn">
-                        Download All Agent Reports
-                    </button>
-                </div>
-            </div>
-
-            <div class="results-section" id="resultsSection">
-                <div class="results-header">
-                    <h2>⚡ Bonus Calculation Results</h2>
-                    <p id="teamResults"></p>
-                </div>
-
-                <div class="summary-stats" id="summaryStats">
-                    <!-- Stats will be populated by JavaScript -->
-                </div>
-
-                <div class="results-table">
-                    <table id="resultsTable">
-                        <thead>
-                            <tr>
-                                <th>Agent</th>
-                                <th>Account #</th>
-                                <th>Payment Amount</th>
-                                <th>Bonus Earned</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resultsBody">
-                            <!-- Results will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="download-section">
-                    <button class="download-btn" id="downloadBtn">
-                        ⚡ Download Summary Report (HTML)
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
-    <script>
-        let selectedTeam = null;
-        let calculatedBonuses = [];
-        let agentData = {};
-        let payPeriodData = {};
-
-        // Bonus structures
-        const bonusStructures = {
-            mexico: [
-                { min: 500, max: 999, bonus: 25 },
-                { min: 1000, max: 1999, bonus: 50 },
-                { min: 2000, max: 3999, bonus: 100 },
-                { min: 4000, max: Infinity, bonus: 200 }
-            ],
-            opac: [
-                { min: 500, max: 999, bonus: 5 },
-                { min: 1000, max: 1499, bonus: 10 },
-                { min: 1500, max: 1999, bonus: 15 },
-                { min: 2000, max: 2499, bonus: 20 },
-                { min: 2500, max: 2999, bonus: 25 },
-                { min: 3000, max: 3499, bonus: 30 },
-                { min: 3500, max: 3999, bonus: 35 },
-                { min: 4000, max: Infinity, bonus: 40 }
-            ]
-        };
-
-        // Team selection
-        document.querySelectorAll('.team-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                selectedTeam = this.dataset.team;
-            });
-        });
-
-        // File upload
-        document.getElementById('fileInput').addEventListener('change', handleFile);
-
-        // Agent selector
-        document.getElementById('agentSelect').addEventListener('change', function() {
-            const downloadBtn = document.getElementById('downloadIndividualBtn');
-            downloadBtn.disabled = !this.value;
-        });
-
-        // Download buttons
-        document.getElementById('downloadIndividualBtn').addEventListener('click', function() {
-            const selectedAgent = document.getElementById('agentSelect').value;
-            if (selectedAgent) {
-                downloadIndividualReport(selectedAgent);
-            }
-        });
-
-        document.getElementById('downloadAllBtn').addEventListener('click', downloadAllReports);
-
-        // Drag and drop
-        const uploadSection = document.getElementById('uploadSection');
-        uploadSection.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadSection.classList.add('dragover');
-        });
-
-        uploadSection.addEventListener('dragleave', () => {
-            uploadSection.classList.remove('dragover');
-        });
-
-        uploadSection.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadSection.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                processFile(files[0]);
-            }
-        });
-
-        function handleFile(event) {
-            const file = event.target.files[0];
-            if (file) {
-                document.getElementById('fileName').textContent = `Selected: ${file.name}`;
-                document.getElementById('fileName').style.display = 'block';
-                processFile(file);
-            }
-        }
-
-        function processFile(file) {
-            if (!selectedTeam) {
-                alert('Please select a team first!');
-                return;
-            }
-
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('resultsSection').style.display = 'none';
-            document.getElementById('individualDownloadSection').style.display = 'none';
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    window.currentWorkbook = workbook;
-                    calculateBonuses();
-                } catch (error) {
-                    alert('Error reading file. Please make sure it\'s a valid Excel file.');
-                    console.error(error);
-                    document.getElementById('loading').style.display = 'none';
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function calculateBonuses() {
-            calculatedBonuses = [];
-            agentData = {};
-            payPeriodData = {};
-            const structure = bonusStructures[selectedTeam];
-
-            const workbook = window.currentWorkbook;
-            
-            workbook.SheetNames.forEach(sheetName => {
-                const sheet = workbook.Sheets[sheetName];
-                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                
-                // Find the header row (contains "Pmt Amt")
-                let headerRowIndex = -1;
-                let headerRow = [];
-                
-                for (let i = 0; i < jsonData.length; i++) {
-                    if (jsonData[i] && jsonData[i].some(cell => cell && cell.toString().includes('Pmt Amt'))) {
-                        headerRowIndex = i;
-                        headerRow = jsonData[i];
-                        break;
-                    }
-                }
-                
-                if (headerRowIndex === -1) return;
-                
-                const pmtAmtIndex = headerRow.findIndex(cell => cell && cell.toString().includes('Pmt Amt'));
-                const accountIndex = headerRow.findIndex(cell => cell && cell.toString().includes('Account #'));
-                const dateIndex = headerRow.findIndex(cell => cell && cell.toString().includes('Pmt Date'));
-                
-                // Extract agent from sheet name or row 1
-                let agent = '';
-                if (jsonData[1] && jsonData[1][0]) {
-                    agent = jsonData[1][0].toString().trim();
-                }
-
-                // Extract pay period from row under agent name (row 2)
-                let payPeriod = '';
-                if (jsonData[2] && jsonData[2][0]) {
-                    payPeriod = jsonData[2][0].toString().trim();
-                }
-                
-                if (agent) {
-                    payPeriodData[agent] = payPeriod;
-                    agentData[agent] = [];
-                }
-                
-                // Process data rows
-                for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
-                    const row = jsonData[i];
-                    if (!row || row.length === 0) continue;
-                    
-                    const pmtAmtStr = row[pmtAmtIndex];
-                    const accountNum = row[accountIndex];
-                    const date = row[dateIndex];
-                    
-                    if (!pmtAmtStr || !accountNum || accountNum.toString().trim() === '') continue;
-                    
-                    const pmtAmt = parseFloat(pmtAmtStr.toString().replace(/[$,]/g, ''));
-                    
-                    if (pmtAmt >= 500 && accountNum) {
-                        const bonus = calculateBonus(pmtAmt, structure);
-                        const bonusData = {
-                            agent: agent,
-                            accountNum: accountNum.toString(),
-                            paymentAmount: pmtAmt,
-                            bonusAmount: bonus,
-                            date: date ? date.toString() : ''
-                        };
-                        
-                        calculatedBonuses.push(bonusData);
-                        
-                        if (agent && agentData[agent]) {
-                            agentData[agent].push(bonusData);
-                        }
-                    }
-                }
-            });
-
-            populateAgentSelector();
-            displayResults();
-            document.getElementById('loading').style.display = 'none';
-        }
-
-        function calculateBonus(amount, structure) {
-            for (let bracket of structure) {
-                if (amount >= bracket.min && amount <= bracket.max) {
-                    return bracket.bonus;
-                }
-            }
-            return 0;
-        }
-
-        function populateAgentSelector() {
-            const agentSelect = document.getElementById('agentSelect');
-            agentSelect.innerHTML = '<option value="">Select Agent...</option>';
-            
-            const uniqueAgents = Object.keys(agentData).sort();
-            uniqueAgents.forEach(agent => {
-                const option = document.createElement('option');
-                option.value = agent;
-                option.textContent = agent;
-                agentSelect.appendChild(option);
-            });
-
-            if (uniqueAgents.length > 0) {
-                document.getElementById('individualDownloadSection').style.display = 'block';
-            }
-        }
-
-        function displayResults() {
-            const resultsSection = document.getElementById('resultsSection');
-            const teamResults = document.getElementById('teamResults');
-            const summaryStats = document.getElementById('summaryStats');
-            const resultsBody = document.getElementById('resultsBody');
-
-            resultsSection.style.display = 'block';
-            teamResults.textContent = `Results for ${selectedTeam.toUpperCase()} Team`;
-
-            const totalBonuses = calculatedBonuses.reduce((sum, item) => sum + item.bonusAmount, 0);
-            const totalPayments = calculatedBonuses.reduce((sum, item) => sum + item.paymentAmount, 0);
-            const uniqueAgents = new Set(calcul Set(calculatedBonuses.map(item => item.agent)).atedBonuses.map(item => item.agent)).size;
-
-            summaryStats.innerHTML = `size;
-
-            summaryStats.innerHTML = `
-                <div class="stat-card">
-                    <div
-                <div class="stat-card">
-                    <div class="stat-value">$${totalBonuses.toLoc class="stat-value">$${totalBonuses.toLocaleString()}</div>
-                    <div class="stat-labelaleString()}</div>
-                    <div class="stat-label">Total Bonuses</div>
-                </div>">Total Bonuses</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-
-                <div class="stat-card">
-                    <div class="stat-value">${calculatedBonuses.length}</divvalue">${calculatedBonuses.length}</div>
-                    <div class="stat-label">Qualifying>
-                    <div class="stat-label">Qualifying Payments</div>
-                </div> Payments</div>
-                </div>
-                <div class="stat-card">
-                    <div class
-                <div class="stat-card">
-                    <div class="stat-value">${uniqueAgents}</div>="stat-value">${uniqueAgents}</div>
-                    <div class="stat-label">Agents
-                    <div class="stat-label">Agents Earning Bonuses</div> Earning Bonuses</div>
-                </div>
-                <div class="stat-card">
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">$${totalPayments.toLoc
-                    <div class="stat-value">$${totalPayments.toLocaleString()}</div>
-                    <div class="stat-labelaleString()}</div>
-                    <div class="stat-label">Total Payments</div>
-                </div>
-            `;">Total Payments</div>
-                </div>
-            `;
+            summaryStats.innerHTML = '<div class="stat-card"><div class="stat-value">$' + totalBonuses.toLocaleString() + '</div><div class="stat-label">Total Bonuses</div></div><div class="stat-card"><div class="stat-value">' + calculatedBonuses.length + '</div><div class="stat-label">Qualifying Payments</div></div><div class="stat-card"><div class="stat-value">' + uniqueAgents + '</div><div class="stat-label">Agents Earning Bonuses</div></div><div class="stat-card"><div class="stat-value">$' + totalPayments.toLocaleString() + '</div><div class="stat-label">Total Payments</div></div>';
 
             resultsBody.innerHTML = '';
-
-            resultsBody.innerHTML = '';
-            calculatedBonuses.forEach(bonus
             calculatedBonuses.forEach(bonus => {
                 const row = document.createElement('tr');
-                row => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${bonus.agent}</td>.innerHTML = `
-                    <td>${bonus.agent}</td>
-                    <td>${bonus.
-                    <td>${bonus.accountNum}</td>accountNum}</td>
-                    <td>$${bonus.paymentAmount.
-                    <td>$${bonus.paymentAmount.toLocaleString()}</td>toLocaleString()}</td>
-                    <td class="bonus-amount">
-                    <td class="bonus-amount">$${bonus.bonusAmount}$${bonus.bonusAmount}</td>
-                    <td>${</td>
-                    <td>${bonus.date}</td>bonus.date}</td>
-                `;
-                resultsBody.
-                `;
+                row.innerHTML = '<td>' + bonus.agent + '</td><td>' + bonus.accountNum + '</td><td>$' + bonus.paymentAmount.toLocaleString() + '</td><td class="bonus-amount">$' + bonus.bonusAmount + '</td><td>' + bonus.date + '</td>';
                 resultsBody.appendChild(row);
-            });appendChild(row);
             });
-        }
-
-        async function downloadIndividualReport(ag
         }
 
         async function downloadIndividualReport(agentName) {
-            try {entName) {
             try {
-                // Check if docx library is loade
-                // Check if docx library is loaded
-                if (typeof docx === 'undefined') {d
                 if (typeof docx === 'undefined') {
-                    alert('DOCX library not loaded. Please refresh
                     alert('DOCX library not loaded. Please refresh the page and try again.');
-                    return; the page and try again.');
                     return;
-                }
-
-                if (!agentData[agentName]) {
                 }
 
                 if (!agentData[agentName]) {
                     alert('No data found for selected agent');
                     return;
                 }
-                    alert('No data found for selected agent');
-                    return;
-                }
 
                 const agent = agentData[agentName];
-                const pay
-
-                const agent = agentData[agentName];
-                const payPeriod = payPeriodData[agentName]Period = payPeriodData[agentName] || 'N/A';
-                const totalCommission = agent || 'N/A';
-                const totalCommission = agent.reduce((sum, item) => sum + item.paymentAmount, 0);.reduce((sum, item) => sum + item.paymentAmount, 0);
-                const totalBonus = agent.reduce((sum, item) => sum + item.bon
+                const payPeriod = payPeriodData[agentName] || 'N/A';
+                const totalCommission = agent.reduce((sum, item) => sum + item.paymentAmount, 0);
                 const totalBonus = agent.reduce((sum, item) => sum + item.bonusAmount, 0);
                 const today = new Date().toLocaleDateString();
 
-                //usAmount, 0);
-                const today = new Date().toLocaleDateString();
-
-                // Create DOCX document
-                const doc = new docx Create DOCX document
                 const doc = new docx.Document({
-                    sections: [{
-                        properties: {},.Document({
                     sections: [{
                         properties: {},
                         children: [
-                            // Header
-                            new docx.
-                        children: [
-                            // Header
                             new docx.Paragraph({
                                 children: [
-                                    new docxParagraph({
-                                children: [
                                     new docx.TextRun({
-                                        text: ".TextRun({
-                                        text: "⚡ THE POWERHOUZE GROUP",
-                                        bold: true⚡ THE POWERHOUZE GROUP",
+                                        text: "THE POWERHOUZE GROUP",
                                         bold: true,
-                                        size: 32,
-                                        color: "1,
                                         size: 32,
                                         color: "1e40af"
                                     })
                                 ],
-                                alignment: docx.e40af"
-                                    })
-                                ],
                                 alignment: docx.AlignmentType.CENTER,
-                                spacing: {AlignmentType.CENTER,
                                 spacing: { after: 200 }
-                            }), after: 200 }
                             }),
                             new docx.Paragraph({
                                 children: [
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "
                                     new docx.TextRun({
                                         text: "Individual Agent Commission Report",
                                         bold: true,
-                                        size:Individual Agent Commission Report",
-                                        bold: true,
                                         size: 24,
-                                        color: "3 24,
-                                        color: "3b82f6"b82f6"
-                                    })
-                                ],
-                                alignment: docx.Alignment
+                                        color: "3b82f6"
                                     })
                                 ],
                                 alignment: docx.AlignmentType.CENTER,
-                                spacing: { after: 400Type.CENTER,
                                 spacing: { after: 400 }
                             }),
-
-                            // Agent Information }
-                            }),
-
-                            // Agent Information
-                            new docx.Paragraph({
                             new docx.Paragraph({
                                 children: [
-                                children: [
-                                    new docx.TextRun({
-                                        text: "
                                     new docx.TextRun({
                                         text: "Agent Information",
-                                        bold: trueAgent Information",
                                         bold: true,
-                                        size: 20,
-                                        color:,
                                         size: 20,
                                         color: "1e40af"
                                     })
-                                ], "1e40af"
-                                    })
                                 ],
                                 spacing: { after: 200 }
                             }),
-                                spacing: { after: 200 }
-                            }),
                             new docx.Paragraph({
                                 children: [
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                    new docx.TextRun({ text: "Agent: ", bold: true }), text: "Agent: ", bold: true }),
-                                    new docx.TextRun({ text: agentName })
+                                    new docx.TextRun({ text: "Agent: ", bold: true }),
                                     new docx.TextRun({ text: agentName })
                                 ],
                                 spacing: { after: 100 }
-                                ],
-                                spacing: { after: 100 }
-                            }),
-                            new docx.Paragraph({
                             }),
                             new docx.Paragraph({
                                 children: [
-                                    new docx.TextRun({
-                                children: [
-                                    new docx.TextRun({ text: "Pay Period: ", bold: true }), text: "Pay Period: ", bold: true }),
-                                    new docx.TextRun({ text: payPeri
+                                    new docx.TextRun({ text: "Pay Period: ", bold: true }),
                                     new docx.TextRun({ text: payPeriod })
                                 ],
-                                spacing: { after: 100od })
-                                ],
                                 spacing: { after: 100 }
                             }),
-                            new docx.Paragraph({ }
-                            }),
                             new docx.Paragraph({
                                 children: [
-                                    new docx.TextR
-                                children: [
-                                    new docx.TextRun({ text: "Payment Date: ", bold: true }),un({ text: "Payment Date: ", bold: true }),
-                                    new docx.TextRun({ text: today })
+                                    new docx.TextRun({ text: "Payment Date: ", bold: true }),
                                     new docx.TextRun({ text: today })
                                 ],
                                 spacing: { after: 300 }
                             }),
-
-                                ],
-                                spacing: { after: 300 }
-                            }),
-
-                            // Weekly Summary
-                            new docx.Paragraph({
-                                children:
-                            // Weekly Summary
                             new docx.Paragraph({
                                 children: [
-                                    new docx.TextRun({ [
                                     new docx.TextRun({
                                         text: "WEEKLY SUMMARY",
-                                        text: "WEEKLY SUMMARY",
-                                        bold: true,
-                                        size: 20,
                                         bold: true,
                                         size: 20,
                                         color: "1e40af"
                                     })
-                                        color: "1e40af"
-                                    })
                                 ],
                                 spacing: { after: 200 }
-                                ],
-                                spacing: { after: 200 }
-                            }),
-                            new docx.Paragraph({
-                                children
                             }),
                             new docx.Paragraph({
                                 children: [
-                                    new docx.TextRun({: [
-                                    new docx.TextRun({ text: "Days Worked: ", bold: true }), text: "Days Worked: ", bold: true }),
-                                    new docx.TextRun({ text: "_
+                                    new docx.TextRun({ text: "Days Worked: ", bold: true }),
                                     new docx.TextRun({ text: "_____________" })
-                                ],____________" })
                                 ],
-                                spacing: { after: 100 }
-                            }),
                                 spacing: { after: 100 }
                             }),
                             new docx.Paragraph({
                                 children: [
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextR
-                                    new docx.TextRun({ text: "Base Weekly Salary: ", bold: true }),un({ text: "Base Weekly Salary: ", bold: true }),
-                                    new docx.
-                                    new docx.TextRun({ text: "$_TextRun({ text: "$_____________" })
-                                ],
-                                spacing: { after: ____________" })
+                                    new docx.TextRun({ text: "Base Weekly Salary: ", bold: true }),
+                                    new docx.TextRun({ text: "$_____________" })
                                 ],
                                 spacing: { after: 100 }
-                            }),100 }
                             }),
-                            new docx.Paragraph
                             new docx.Paragraph({
-                                children: [({
                                 children: [
-                                    new docx.TextRun({ text: "Total
-                                    new docx.TextRun({ text: "Total Commission Earned: ", bold: true }), Commission Earned: ", bold: true }),
-                                    new docx.TextRun({ text: `
-                                    new docx.TextRun({ text: `$${totalCommission.toLocaleString()}`,$${totalCommission.toLocaleString()}`, bold: true, color bold: true, color: "059669" })
-                                ],: "059669" })
+                                    new docx.TextRun({ text: "Total Commission Earned: ", bold: true }),
+                                    new docx.TextRun({ text: "$" + totalCommission.toLocaleString(), bold: true, color: "059669" })
                                 ],
-                                spacing: { after: 
                                 spacing: { after: 100 }
                             }),
                             new docx.Paragraph({
-                                children: [100 }
-                            }),
-                            new docx.Paragraph({
                                 children: [
-                                    new docx.TextRun({ text: "Total
-                                    new docx.TextRun({ text: "Total Bonus Amount: ", bold: true }), Bonus Amount: ", bold: true }),
-                                    new docx.TextRun({ text: `$${total
-                                    new docx.TextRun({ text: `$${totalBonus.toLocaleString()}`, bold: true, color: "Bonus.toLocaleString()}`, bold: true, color: "059669" })
-                                ],
-                                spacing: { after:059669" })
+                                    new docx.TextRun({ text: "Total Bonus Amount: ", bold: true }),
+                                    new docx.TextRun({ text: "$" + totalBonus.toLocaleString(), bold: true, color: "059669" })
                                 ],
                                 spacing: { after: 300 }
-                            }), 300 }
                             }),
-
-                            // Commission Breakdown Header
-                            new docx.
-
-                            // Commission Breakdown Header
                             new docx.Paragraph({
                                 children: [
-                                    new docx.Paragraph({
-                                children: [
                                     new docx.TextRun({
-                                        text: "COMMISSION BREAKDOWN",TextRun({
                                         text: "COMMISSION BREAKDOWN",
                                         bold: true,
-                                        size: 20
-                                        bold: true,
                                         size: 20,
-                                        color: ",
-                                        color: "1e40af"1e40af"
-                                    })
-                                ],
-                                spacing: { after: 200
+                                        color: "1e40af"
                                     })
                                 ],
                                 spacing: { after: 200 }
                             }),
-
-                            // Commission Table }
-                            }),
-
-                            // Commission Table
-                            new docx.Table({
-                                rows: [
                             new docx.Table({
                                 rows: [
                                     new docx.TableRow({
-                                    new docx.TableRow({
-                                        children: [
                                         children: [
                                             new docx.TableCell({
-                                            new docx.TableCell({
-                                                children: [new docx.
-                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Paragraph({ children: [new docx.TextRun({ text: "Date", bold: true })] })],
-                                                shDate", bold: true })] })],
-                                                shading: { fill: "1e40af" }ading: { fill: "1e40af" }
-                                            }),
-                                            new docx.TableCell({
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({ children: [new 
-                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Account #", bold: true })] })docx.TextRun({ text: "Account #", bold: true })] })],
-                                                shading: { fill: "1e40af],
+                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Date", bold: true })] })],
                                                 shading: { fill: "1e40af" }
                                             }),
-                                            new docx.Table" }
+                                            new docx.TableCell({
+                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Account #", bold: true })] })],
+                                                shading: { fill: "1e40af" }
                                             }),
                                             new docx.TableCell({
-                                                children: [new docx.Paragraph({Cell({
-                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Commission children: [new docx.TextRun({ text: "Commission", bold: true })] })],
-                                                shading: {", bold: true })] })],
+                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Commission", bold: true })] })],
                                                 shading: { fill: "1e40af" }
-                                            }), fill: "1e40af" }
                                             }),
                                             new docx.TableCell({
-                                                children: [
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({ children: [new docx.TextRnew docx.Paragraph({ children: [new docx.TextRun({ text: "Bonus", bold: true })] })],un({ text: "Bonus", bold: true })] })],
-                                                shading: { fill: "1e40af" }
+                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Bonus", bold: true })] })],
                                                 shading: { fill: "1e40af" }
                                             })
                                         ]
-                                            })
-                                        ]
-                                    }),
-                                    ...agent.map(item => new
-                                    }),
-                                    ...agent.map(item => new docx.TableRow({
-                                        children: [ docx.TableRow({
-                                        children: [
-                                            new docx.TableCell({
-                                                children: [new
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({ children: [new docx.TextRun docx.Paragraph({ children: [new docx.TextRun({ text: item.date })] }({ text: item.date })] })]
-                                            }),
-                                            new docx.TableCell)]
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({ children({
-                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: item.accountNum: [new docx.TextRun({ text: item.accountNum })] })]
-                                            }),
-                                            new docx })] })]
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx..TableCell({
-                                                children: [new docx.Paragraph({ children: [new docx.TextRun({ text: `Paragraph({ children: [new docx.TextRun({ text: `$${item.paymentAmount.toLocaleString()}` })]$${item.paymentAmount.toLocaleString()}` })] })]
-                                            }),
-                                            new docx.Table })]
-                                            }),
-                                            new docx.TableCell({
-                                                children:Cell({
-                                                children: [new docx.Paragraph({ children: [new docx.Text [new docx.Paragraph({ children: [new docx.TextRun({ text: `$${item.bonusAmount}Run({ text: `$${item.bonusAmount}`, bold: true })] })]`, bold: true })] })]
-                                            })
-                                        ]
-                                    }))
-                                            })
-                                        ]
-                                    }))
-                                ],
-                                width: {
-                                ],
-                                width: { size: 100, type: docx. size: 100, type: docx.WidthType.PERCENTAGE }
-                            }),WidthType.PERCENTAGE }
+                                    })
+                                ].concat(agent.map(item => new docx.TableRow({
+                                    children: [
+                                        new docx.TableCell({
+                                            children: [new docx.Paragraph({ children: [new docx.TextRun({ text: item.date })] })]
+                                        }),
+                                        new docx.TableCell({
+                                            children: [new docx.Paragraph({ children: [new docx.TextRun({ text: item.accountNum })] })]
+                                        }),
+                                        new docx.TableCell({
+                                            children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "$" + item.paymentAmount.toLocaleString() })] })]
+                                        }),
+                                        new docx.TableCell({
+                                            children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "$" + item.bonusAmount, bold: true })] })]
+                                        })
+                                    ]
+                                }))),
+                                width: { size: 100, type: docx.WidthType.PERCENTAGE }
                             }),
-
-                            // Additional Bonuses Section
-
-                            // Additional Bonuses Section
                             new docx.Paragraph({
                                 children: [
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.
                                     new docx.TextRun({
-                                        text: "ADDITIONAL BONUSESTextRun({
                                         text: "ADDITIONAL BONUSES (Manual Entry)",
-                                        bold: true (Manual Entry)",
                                         bold: true,
                                         size: 18,
-                                        size: 18,
-                                        color: "92,
                                         color: "92400e"
-                                    })400e"
-                                    })
-                                ],
-                                spacing:
-                                ],
-                                spacing: { before: 400, after: 200 } { before: 400, after: 200 }
-                            }),
-                            new docx.Paragraph({
-                                children
-                            }),
-                            new docx.Paragraph({
-                                children: [new docx.TextRun({ text: [new docx.TextRun({ text: "Description: _________________________ Amount: "Description: _________________________ Amount: $_______ Date: _________: $_______ Date: _________" })],
-                                spacing: { after" })],
-                                spacing: { after: 100 }
-                            }),
-                            new docx.: 100 }
-                            }),
-                            new docx.Paragraph({
-                                children: [new docx.TextRunParagraph({
-                                children: [new docx.TextRun({ text: "Description: _________________________ Amount: $______({ text: "Description: _________________________ Amount: $_______ Date: _________" })],_ Date: _________" })],
-                                spacing: { after:
-                                spacing: { after: 100 }
-                            }),
-                            new docx.Paragraph({
-                                children: [ 100 }
-                            }),
-                            new docx.Paragraph({
-                                children: [new docx.TextRun({ text: "Description: _________________________new docx.TextRun({ text: "Description: _________________________ Amount: $_______ Date: _ Amount: $_______ Date: _________" })],
-                                spacing________" })],
-                                spacing: { after: 100 }
-                            }),
-                            new: { after: 100 }
-                            }),
-                            new docx.Paragraph({
-                                children: [new docx. docx.Paragraph({
-                                children: [new docx.TextRun({ text: "Description: _________________________ Amount: $______TextRun({ text: "Description: _________________________ Amount: $_______ Date: _________" })],_ Date: _________" })],
-                                spacing: { after:
-                                spacing: { after: 300 }
-                            }), 300 }
-                            }),
-
-                            // Total Weekly Pay
-                            new docx.
-
-                            // Total Weekly Pay
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({TextRun({
-                                        text: "TOTAL WEEKLY PAY",
-                                        bold:
-                                        text: "TOTAL WEEKLY PAY",
-                                        bold: true,
-                                        size: true,
-                                        size: 24,
-                                        color: " 24,
-                                        color: "059669"
-                                    })059669"
-                                    })
-                                ],
-                                alignment: docx.AlignmentType
-                                ],
-                                alignment: docx.AlignmentType.CENTER,
-                                spacing: { before.CENTER,
-                                spacing: { before: 300, after: 200 }: 300, after: 200 }
-                            }),
-                            new docx.Paragraph({
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.Text
-                                children: [
-                                    new docx.TextRun({
-                                        text: "$Run({
-                                        text: "$[Base + Commission + Bonuses +[Base + Commission + Bonuses + Manual] = $__________",
-                                        size Manual] = $__________",
-                                        size: 18,
-                                        bol: 18,
-                                        bold: true
-                                    })
-                                ],d: true
-                                    })
-                                ],
-                                alignment: docx.AlignmentType.CENTER,
-                                alignment: docx.AlignmentType.CENTER,
-                                spacing: { after: 400
-                                spacing: { after: 400 }
-                            }),
-
-                            // Signature }
-                            }),
-
-                            // Signature Section
-                            new docx.Paragraph({
-                                children: Section
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({ [
-                                    new docx.TextRun({
-                                        text: "AGENT ACKNOWLEDGMENT",
-                                        bold:
-                                        text: "AGENT ACKNOWLEDGMENT",
-                                        bold: true,
-                                        size: 20 true,
-                                        size: 20,
-                                        color: "1e40af",
-                                        color: "1e40af"
-                                    })
-                                ],
-                                spacing: { before
                                     })
                                 ],
                                 spacing: { before: 400, after: 200 }
-                            }),: 400, after: 200 }
+                            }),
+                            new docx.Paragraph({
+                                children: [new docx.TextRun({ text: "Description: _________________________ Amount: $_______ Date: _________" })],
+                                spacing: { after: 100 }
+                            }),
+                            new docx.Paragraph({
+                                children: [new docx.TextRun({ text: "Description: _________________________ Amount: $_______ Date: _________" })],
+                                spacing: { after: 100 }
+                            }),
+                            new docx.Paragraph({
+                                children: [new docx.TextRun({ text: "Description: _________________________ Amount: $_______ Date: _________" })],
+                                spacing: { after: 100 }
+                            }),
+                            new docx.Paragraph({
+                                children: [new docx.TextRun({ text: "Description: _________________________ Amount: $_______ Date: _________" })],
+                                spacing: { after: 300 }
                             }),
                             new docx.Paragraph({
                                 children: [
+                                    new docx.TextRun({
+                                        text: "TOTAL WEEKLY PAY",
+                                        bold: true,
+                                        size: 24,
+                                        color: "059669"
+                                    })
+                                ],
+                                alignment: docx.AlignmentType.CENTER,
+                                spacing: { before: 300, after: 200 }
+                            }),
                             new docx.Paragraph({
                                 children: [
                                     new docx.TextRun({
-                                        text:
+                                        text: "$[Base + Commission + Bonuses + Manual] = $__________",
+                                        size: 18,
+                                        bold: true
+                                    })
+                                ],
+                                alignment: docx.AlignmentType.CENTER,
+                                spacing: { after: 400 }
+                            }),
+                            new docx.Paragraph({
+                                children: [
                                     new docx.TextRun({
-                                        text: "I acknowledge receipt of the above commission payment "I acknowledge receipt of the above commission payment:",
-                                        size: 16:",
+                                        text: "AGENT ACKNOWLEDGMENT",
+                                        bold: true,
+                                        size: 20,
+                                        color: "1e40af"
+                                    })
+                                ],
+                                spacing: { before: 400, after: 200 }
+                            }),
+                            new docx.Paragraph({
+                                children: [
+                                    new docx.TextRun({
+                                        text: "I acknowledge receipt of the above commission payment:",
                                         size: 16
                                     })
                                 ],
-                                    })
-                                ],
-                                spacing: { after:
                                 spacing: { after: 400 }
-                            }), 400 }
-                            }),
-
-                            // Signature lines
-
-                            // Signature lines
-                            new docx.
-                            new docx.Paragraph({
-                                children: [Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                    new docx.TextRun({ text: "Agent Name: _______________________________ text: "Agent Name: _______________________________     Date: _______________     Date: _______________" })
-                                ],
-                                spacing" })
-                                ],
-                                spacing: { after: 300: { after: 300 }
-                            }), }
                             }),
                             new docx.Paragraph({
-                            new docx.Paragraph({
                                 children: [
-                                    new docx.TextR
-                                children: [
-                                    new docx.TextRun({ text: "Agent Signature: un({ text: "Agent Signature: ___________________________     Date: _______________"___________________________     Date: _______________" })
-                                ],
-                                spacing: { after: 300  })
+                                    new docx.TextRun({ text: "Agent Name: _______________________________     Date: _______________" })
                                 ],
                                 spacing: { after: 300 }
                             }),
-                            new docx.Paragraph({}
+                            new docx.Paragraph({
+                                children: [
+                                    new docx.TextRun({ text: "Agent Signature: ___________________________     Date: _______________" })
+                                ],
+                                spacing: { after: 300 }
                             }),
                             new docx.Paragraph({
                                 children: [
-                                    new docx.TextRun
-                                children: [
-                                    new docx.TextRun({ text: "Manager Signature: _({ text: "Manager Signature: _________________________     Date: _______________" })
-                                ],________________________     Date: _______________" })
+                                    new docx.TextRun({ text: "Manager Signature: _________________________     Date: _______________" })
                                 ],
                                 spacing: { after: 200 }
                             })
-                                spacing: { after: 200 }
-                            })
                         ]
                     }]
                 });
 
-                // Generate
-                        ]
-                    }]
-                });
-
-                // Generate and download
-                const blob = await  and download
-                const blob = await docx.Packer.toBlob(doc);docx.Packer.toBlob(doc);
-                const url = URL.create
+                const blob = await docx.Packer.toBlob(doc);
                 const url = URL.createObjectURL(blob);
-                constObjectURL(blob);
-                const a = document.createElement('a'); a = document.createElement('a');
+                const a = document.createElement('a');
                 a.href = url;
-                a.download = `Agent
-                a.href = url;
-                a.download = `Agent_Report_${ag_Report_${agentName}_${today.entName}_${today.replace(/\//g, '-replace(/\//g, '-')}.docx`;
-                a')}.docx`;
+                a.download = "Agent_Report_" + agentName + "_" + today.replace(/\//g, '-') + ".docx";
                 a.click();
-                URL.r.click();
-                URL.revokeObjectURL(url);evokeObjectURL(url);
-
-            } catch (error) {
+                URL.revokeObjectURL(url);
 
             } catch (error) {
                 console.error('Error generating DOCX:', error);
-                alert
-                console.error('Error generating DOCX:', error);
-                alert('Error generating DOCX document. Please try again or('Error generating DOCX document. Please try again or refresh the page.');
-            } refresh the page.');
+                alert('Error generating DOCX document. Please try again or refresh the page.');
             }
         }
 
         async function downloadAllReports() {
-        }
-
-        async function downloadAllReports() {
-            const agents = Object.keys(agentData
             const agents = Object.keys(agentData);
-            if (agents.length === 0));
             if (agents.length === 0) {
-                alert('No agent data available'); {
                 alert('No agent data available');
                 return;
             }
 
-            for (let
-                return;
-            }
-
-            for (let i = 0; i < agents.length; i++) { i = 0; i < agents.length; i++) {
+            for (let i = 0; i < agents.length; i++) {
                 await downloadIndividualReport(agents[i]);
-                await downloadIndividualReport(agents[i]);
-                // Add delay between downloads
-                if (i < agents.length - 
-                // Add delay between downloads
                 if (i < agents.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve,1) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
         }
 
-        // 1000));
-                }
-            }
-        }
-
-        // Original summary download functionality
-        document.getElementById('downloadBtn Original summary download functionality
-        document.getElementById('downloadBtn').addEventListener('click', downloadSummaryReport);').addEventListener('click', downloadSummaryReport);
+        document.getElementById('downloadBtn').addEventListener('click', downloadSummaryReport);
 
         function downloadSummaryReport() {
-
-        function downloadSummaryReport() {
-            const teamName = selectedTeam.
-            const teamName = selectedTeam.charAt(0).toUpperCase() +charAt(0).toUpperCase() + selectedTeam.slice(1);
-            const date selectedTeam.slice(1);
-            const date = new Date().toLocaleDateString(); = new Date().toLocaleDateString();
+            const teamName = selectedTeam.charAt(0).toUpperCase() + selectedTeam.slice(1);
+            const date = new Date().toLocaleDateString();
             
-            let html = `
-                <html>
-            
-            let html = `
-                <html>
-                <head>
-                    <title>THE
-                <head>
-                    <title>THE POWERHOUZE GROUP - Bonus POWERHOUZE GROUP - Bonus Report</title> Report</title>
-                    <style>
-                        body { font-family: Arial, sans-serif
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 40px; }
-                        .header; margin: 40px; }
-                        .header { text-align: center; margin-bottom: 30px; border { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #-bottom: 2px solid #1e40af; padding-bottom: 20px; }1e40af; padding-bottom: 20px; }
-                        .header h1 { color: #1
-                        .header h1 { color: #1e40af; margin-bottom: 5e40af; margin-bottom: 5px; }
-                        .headerpx; }
-                        .header h2 { color: #3b h2 { color: #3b82f6; margin-bottom:82f6; margin-bottom: 10px; }
-                        .summary 10px; }
-                        .summary { background: #f8fa { background: #f8fafc; padding: 20px;fc; padding: 20px; border-radius: 10 border-radius: 10px; margin-bottom: 30px; }
-                        tablepx; margin-bottom: 30px; }
-                        table { width: 100%; border-collapse: collapse; margin-bottom: { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-                        th, 40px; }
-                        th, td { border: 1px solid #e td { border: 1px solid #e2e8f0; padding:2e8f0; padding: 12px; text-align: left; }
-                        th { 12px; text-align: left; }
-                        th { background: #1 background: #1e40af; color: white;e40af; color: white; }
-                        tr:nth-child(even) { background: }
-                        tr:nth-child(even) { background: #f8fafc; } #f8fafc; }
-                        .signature-section { margin-top: 50
-                        .signature-section { margin-top: 50px; border-top: 2px solid #px; border-top: 2px solid #e2e8f0; padding-e2e8f0; padding-top: 30px; }
-                        .signaturetop: 30px; }
-                        .signature-box { display: inline-block; margin-right: -box { display: inline-block; margin-right: 50px; margin-bottom: 3050px; margin-bottom: 30px; }
-                        .signature-linepx; }
-                        .signature-line { border-bottom: 1px solid #000 { border-bottom: 1px solid #000; width: 200px; margin-bottom; width: 200px; margin-bottom: 5px; height: 20px; }: 5px; height: 20px; }
-                        .bonus-amount { font-weight: bold; color: #
-                        .bonus-amount { font-weight: bold; color: #059669; }
-                    </style>
-                </head>059669; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                <body>
-                    <div class="header">
-                        <h1>⚡ THE POWERHOUZE GROUP
-                        <h1>⚡ THE POWERHOUZE GROUP</h1>
-                        <h2>Bonus Payment</h1>
-                        <h2>Bonus Payment Report - ${teamName} Team</h2> Report - ${teamName} Team</h2>
-                        <p>Report Date: ${date}</p>
-                        <p>Report Date: ${date}</p>
-                    </div>
-                    
-                    <div class="summary">
-                    </div>
-                    
-                    <div class="summary">
-                        <h3>Summary</h3>
-                        <h3>Summary</h3>
-                        <p><strong>Total Bonuses
-                        <p><strong>Total Bonuses Payable:</strong> $${calculatedB Payable:</strong> $${calculatedBonuses.reduce((sum, item) => sum +onuses.reduce((sum, item) => sum + item.bonusAmount, 0).toLocaleString()}</p item.bonusAmount, 0).toLocaleString()}</p>
-                        <p><strong>
-                        <p><strong>Number of Qualifying Payments:</strong> ${calcul>Number of Qualifying Payments:</strong> ${calculatedBonuses.length}</p>
-                        <patedBonuses.length}</p>
-                        <p><strong>Agents Receiving><strong>Agents Receiving Bonuses:</strong> ${new Bonuses:</strong> ${new Set(calculatedBonuses. Set(calculatedBonuses.map(item => item.agent)).size}</p>map(item => item.agent)).size}</p>
-                    </div>
-
-                    <table
-                    </div>
-
-                    <table>
-                        <thead>>
-                        <thead>
-                            <tr>
-                                <th>Agent
-                            <tr>
-                                <th>Agent</th>
-                                <th></th>
-                                <th>Account #</th>Account #</th>
-                                <th>Payment Amount</th>
-                                <th>Payment Amount</th>
-                                <th>Bonus Earned</th>
-                                <th>Bonus Earned</th>
-                                <th>Date</th>
-                            </tr
-                                <th>Date</th>
-                            </tr>
-                        </thead>>
-                        </thead>
-                        <tbody>
-            `;
-
-            calcul
-                        <tbody>
-            `;
+            let html = '<html><head><title>THE POWERHOUZE GROUP - Bonus Report</title><style>body { font-family: Arial, sans-serif; margin: 40px; }.header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e40af; padding-bottom: 20px; }.header h1 { color: #1e40af; margin-bottom: 5px; }.header h2 { color: #3b82f6; margin-bottom: 10px; }.summary { background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 30px; }table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }th { background: #1e40af; color: white; }tr:nth-child(even) { background: #f8fafc; }.signature-section { margin-top: 50px; border-top: 2px solid #e2e8f0; padding-top: 30px; }.signature-box { display: inline-block; margin-right: 50px; margin-bottom: 30px; }.signature-line { border-bottom: 1px solid #000; width: 200px; margin-bottom: 5px; height: 20px; }.bonus-amount { font-weight: bold; color: #059669; }</style></head><body><div class="header"><h1>THE POWERHOUZE GROUP</h1><h2>Bonus Payment Report - ' + teamName + ' Team</h2><p>Report Date: ' + date + '</p></div><div class="summary"><h3>Summary</h3><p><strong>Total Bonuses Payable:</strong> $' + calculatedBonuses.reduce((sum, item) => sum + item.bonusAmount, 0).toLocaleString() + '</p><p><strong>Number of Qualifying Payments:</strong> ' + calculatedBonuses.length + '</p><p><strong>Agents Receiving Bonuses:</strong> ' + new Set(calculatedBonuses.map(item => item.agent)).size + '</p></div><table><thead><tr><th>Agent</th><th>Account #</th><th>Payment Amount</th><th>Bonus Earned</th><th>Date</th></tr></thead><tbody>';
 
             calculatedBonuses.forEach(bonus => {
-                html += `atedBonuses.forEach(bonus => {
-                html += `
-                    <tr>
-                        <td>${bonus.agent}</t
-                    <tr>
-                        <td>${bonus.agent}</td>
-                        <td>${bonus.accountNum}</td>d>
-                        <td>${bonus.accountNum}</td>
-                        <td>$${bonus.
-                        <td>$${bonus.paymentAmount.toLocaleString()}</td>paymentAmount.toLocaleString()}</td>
-                        <td class="bonus-amount">$${bonus.bonusAmount}
-                        <td class="bonus-amount">$${bonus.bonusAmount}</td>
-                        <td>${bonus.date}</td></td>
-                        <td>${bonus.date}</td>
-                    </tr>
-                `;
+                html += '<tr><td>' + bonus.agent + '</td><td>' + bonus.accountNum + '</td><td>$' + bonus.paymentAmount.toLocaleString() + '</td><td class="bonus-amount">$' + bonus.bonusAmount + '</td><td>' + bonus.date + '</td></tr>';
             });
 
-            html += `
-                    </tr>
-                `;
-            });
+            html += '</tbody></table><div class="signature-section"><h3>Agent Acknowledgment</h3><p>I acknowledge receipt of the bonus payment(s) listed above:</p><br><br><div class="signature-box"><div class="signature-line"></div><p>Agent Signature</p></div><div class="signature-box"><div class="signature-line"></div><p>Date</p></div><br><br><div class="signature-box"><div class="signature-line"></div><p>Manager Signature</p></div><div class="signature-box"><div class="signature-line"></div><p>Date</p></div></div></body></html>';
 
-            html += `
-                        </tbody>
-                    </table
-                        </tbody>
-                    </table>
-
-                    <div class="signature-section">>
-
-                    <div class="signature-section">
-                        <h3>Agent Acknowledgment</h
-                        <h3>Agent Acknowledgment</h3>
-                        <p>I acknowledge receipt of the bonus3>
-                        <p>I acknowledge receipt of the bonus payment(s) listed above:</p> payment(s) listed above:</p>
-                        <br><br>
-                        <div class
-                        <br><br>
-                        <div class="signature-box">
-                            <div class="signature-line">="signature-box">
-                            <div class="signature-line"></div>
-                            <p></div>
-                            <p>Agent Signature</p>Agent Signature</p>
-                        </div>
-                        
-                        <div class="signature-
-                        </div>
-                        
-                        <div class="signature-box">
-                            <div classbox">
-                            <div class="signature-line"></div>
-                            <p>Date="signature-line"></div>
-                            <p>Date</p>
-                        </div>
-                        </p>
-                        </div>
-                        
-                        <br><br>
-                        <div
-                        <br><br>
-                        <div class="signature-box">
-                            <div class="signature-line class="signature-box">
-                            <div class="signature-line"></div>
-                            <p"></div>
-                            <p>Manager Signature</p>
-                        </div>>Manager Signature</p>
-                        </div>
-                        
-                        <div class="signature
-                        
-                        <div class="signature-box">
-                            <div class="signature-line"></div>-box">
-                            <div class="signature-line"></div>
-                            <p>Date
-                            <p>Date</p>
-                        </div>
-                    </div></p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-                </body>
-                </html>
-            `;
-
-            const blob
-            `;
-
-            const blob = new Blob([html], { = new Blob([html], { type: 'text/html' type: 'text/html' });
-            const url = URL. });
-            const url = URL.createObjectURL(blob);createObjectURL(blob);
-            const a = document.createElement('a
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url');
             a.href = url;
-            a.download = `;
-            a.download = `Powerhouze_Powerhouze_Bonus_Report_${teamName}_Bonus_Report_${teamName}_${date.replace(/\//g, '-')${date.replace(/\//g, '-')}.html`;
-            a.click}.html`;
+            a.download = "Powerhouze_Bonus_Report_" + teamName + "_" + date.replace(/\//g, '-') + ".html";
             a.click();
-            URL.revoke();
             URL.revokeObjectURL(url);
-        }ObjectURL(url);
         }
     </script>
 </body>
