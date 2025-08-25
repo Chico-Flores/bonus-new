@@ -300,66 +300,11 @@
             font-size: 1.1rem;
             font-weight: bold;
             transition: all 0.3s ease;
-            margin: 10px;
         }
 
         .download-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(251, 191, 36, 0.3);
-        }
-
-        .individual-download-section {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
-            display: none;
-        }
-
-        .individual-download-section h3 {
-            color: white;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
-        .agent-selector {
-            margin-bottom: 20px;
-        }
-
-        .agent-selector select {
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: 2px solid #059669;
-            font-size: 1.1rem;
-            margin-right: 15px;
-            background: white;
-            color: #1e40af;
-            font-weight: bold;
-        }
-
-        .individual-btn {
-            background: white;
-            color: #059669;
-            border: 3px solid white;
-            padding: 12px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            margin: 5px;
-        }
-
-        .individual-btn:hover {
-            background: #059669;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .individual-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
         }
 
         .loading {
@@ -495,23 +440,6 @@
                 <p>Processing your file...</p>
             </div>
 
-            <div class="individual-download-section" id="individualDownloadSection">
-                <h3>⚡ Download Individual Agent Reports (DOCX)</h3>
-                <div class="agent-selector">
-                    <select id="agentSelect">
-                        <option value="">Select Agent...</option>
-                    </select>
-                    <button class="individual-btn" id="downloadIndividualBtn" disabled>
-                        Download Selected Agent Report
-                    </button>
-                </div>
-                <div>
-                    <button class="individual-btn" id="downloadAllBtn">
-                        Download All Agent Reports
-                    </button>
-                </div>
-            </div>
-
             <div class="results-section" id="resultsSection">
                 <div class="results-header">
                     <h2>⚡ Bonus Calculation Results</h2>
@@ -541,7 +469,7 @@
 
                 <div class="download-section">
                     <button class="download-btn" id="downloadBtn">
-                        ⚡ Download Summary Report (HTML)
+                        ⚡ Download Bonus Report for Payroll
                     </button>
                 </div>
             </div>
@@ -549,12 +477,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.2/docx.min.js"></script>
     <script>
         let selectedTeam = null;
         let calculatedBonuses = [];
-        let agentData = {};
-        let payPeriodData = {};
 
         // Bonus structures
         const bonusStructures = {
@@ -587,22 +512,6 @@
 
         // File upload
         document.getElementById('fileInput').addEventListener('change', handleFile);
-
-        // Agent selector
-        document.getElementById('agentSelect').addEventListener('change', function() {
-            const downloadBtn = document.getElementById('downloadIndividualBtn');
-            downloadBtn.disabled = !this.value;
-        });
-
-        // Download buttons
-        document.getElementById('downloadIndividualBtn').addEventListener('click', function() {
-            const selectedAgent = document.getElementById('agentSelect').value;
-            if (selectedAgent) {
-                downloadIndividualReport(selectedAgent);
-            }
-        });
-
-        document.getElementById('downloadAllBtn').addEventListener('click', downloadAllReports);
 
         // Drag and drop
         const uploadSection = document.getElementById('uploadSection');
@@ -641,7 +550,6 @@
 
             document.getElementById('loading').style.display = 'block';
             document.getElementById('resultsSection').style.display = 'none';
-            document.getElementById('individualDownloadSection').style.display = 'none';
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -649,8 +557,10 @@
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     
+                    // Store workbook globally so calculateBonuses can access it
                     window.currentWorkbook = workbook;
-                    calculateBonuses();
+                    
+                    calculateBonuses(null); // Pass null since we're using the workbook directly
                 } catch (error) {
                     alert('Error reading file. Please make sure it\'s a valid Excel file.');
                     console.error(error);
@@ -660,12 +570,11 @@
             reader.readAsArrayBuffer(file);
         }
 
-        function calculateBonuses() {
+        function calculateBonuses(data) {
             calculatedBonuses = [];
-            agentData = {};
-            payPeriodData = {};
             const structure = bonusStructures[selectedTeam];
 
+            // Process all sheets in the workbook
             const workbook = window.currentWorkbook;
             
             workbook.SheetNames.forEach(sheetName => {
@@ -684,8 +593,9 @@
                     }
                 }
                 
-                if (headerRowIndex === -1) return;
+                if (headerRowIndex === -1) return; // No header found in this sheet
                 
+                // Find column indices
                 const pmtAmtIndex = headerRow.findIndex(cell => cell && cell.toString().includes('Pmt Amt'));
                 const accountIndex = headerRow.findIndex(cell => cell && cell.toString().includes('Account #'));
                 const dateIndex = headerRow.findIndex(cell => cell && cell.toString().includes('Pmt Date'));
@@ -695,19 +605,8 @@
                 if (jsonData[1] && jsonData[1][0]) {
                     agent = jsonData[1][0].toString().trim();
                 }
-
-                // Extract pay period from row under agent name (row 2)
-                let payPeriod = '';
-                if (jsonData[2] && jsonData[2][0]) {
-                    payPeriod = jsonData[2][0].toString().trim();
-                }
                 
-                if (agent) {
-                    payPeriodData[agent] = payPeriod;
-                    agentData[agent] = [];
-                }
-                
-                // Process data rows
+                // Process data rows (after header)
                 for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
                     const row = jsonData[i];
                     if (!row || row.length === 0) continue;
@@ -716,30 +615,27 @@
                     const accountNum = row[accountIndex];
                     const date = row[dateIndex];
                     
+                    // Skip total/summary rows
                     if (!pmtAmtStr || !accountNum || accountNum.toString().trim() === '') continue;
                     
+                    // Parse payment amount (remove $ and commas)
                     const pmtAmt = parseFloat(pmtAmtStr.toString().replace(/[$,]/g, ''));
                     
                     if (pmtAmt >= 500 && accountNum) {
                         const bonus = calculateBonus(pmtAmt, structure);
-                        const bonusData = {
-                            agent: agent,
-                            accountNum: accountNum.toString(),
-                            paymentAmount: pmtAmt,
-                            bonusAmount: bonus,
-                            date: date ? date.toString() : ''
-                        };
-                        
-                        calculatedBonuses.push(bonusData);
-                        
-                        if (agent && agentData[agent]) {
-                            agentData[agent].push(bonusData);
+                        if (bonus > 0) {
+                            calculatedBonuses.push({
+                                agent: agent,
+                                accountNum: accountNum.toString(),
+                                paymentAmount: pmtAmt,
+                                bonusAmount: bonus,
+                                date: date ? date.toString() : ''
+                            });
                         }
                     }
                 }
             });
 
-            populateAgentSelector();
             displayResults();
             document.getElementById('loading').style.display = 'none';
         }
@@ -753,23 +649,6 @@
             return 0;
         }
 
-        function populateAgentSelector() {
-            const agentSelect = document.getElementById('agentSelect');
-            agentSelect.innerHTML = '<option value="">Select Agent...</option>';
-            
-            const uniqueAgents = Object.keys(agentData).sort();
-            uniqueAgents.forEach(agent => {
-                const option = document.createElement('option');
-                option.value = agent;
-                option.textContent = agent;
-                agentSelect.appendChild(option);
-            });
-
-            if (uniqueAgents.length > 0) {
-                document.getElementById('individualDownloadSection').style.display = 'block';
-            }
-        }
-
         function displayResults() {
             const resultsSection = document.getElementById('resultsSection');
             const teamResults = document.getElementById('teamResults');
@@ -779,6 +658,7 @@
             resultsSection.style.display = 'block';
             teamResults.textContent = `Results for ${selectedTeam.toUpperCase()} Team`;
 
+            // Calculate summary statistics
             const totalBonuses = calculatedBonuses.reduce((sum, item) => sum + item.bonusAmount, 0);
             const totalPayments = calculatedBonuses.reduce((sum, item) => sum + item.paymentAmount, 0);
             const uniqueAgents = new Set(calculatedBonuses.map(item => item.agent)).size;
@@ -802,6 +682,7 @@
                 </div>
             `;
 
+            // Populate results table
             resultsBody.innerHTML = '';
             calculatedBonuses.forEach(bonus => {
                 const row = document.createElement('tr');
@@ -816,400 +697,10 @@
             });
         }
 
-        async function downloadIndividualReport(agentName) {
-            if (!agentData[agentName]) {
-                alert('No data found for selected agent');
-                return;
-            }
+        // Download functionality
+        document.getElementById('downloadBtn').addEventListener('click', downloadReport);
 
-            const agent = agentData[agentName];
-            const payPeriod = payPeriodData[agentName] || 'N/A';
-            const totalCommission = agent.reduce((sum, item) => sum + item.paymentAmount, 0);
-            const totalBonus = agent.reduce((sum, item) => sum + item.bonusAmount, 0);
-            const today = new Date().toLocaleDateString();
-
-            try {
-                // Create DOCX document
-                const doc = new docx.Document({
-                    sections: [{
-                        properties: {},
-                        children: [
-                            // Header
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "THE POWERHOUZE GROUP",
-                                        bold: true,
-                                        size: 32,
-                                    }),
-                                ],
-                                alignment: docx.AlignmentType.CENTER,
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Individual Agent Commission Report",
-                                        bold: true,
-                                        size: 24,
-                                    }),
-                                ],
-                                alignment: docx.AlignmentType.CENTER,
-                                spacing: { after: 400 },
-                            }),
-
-                            // Agent Info
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Agent: ${agentName}`,
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Pay Period: ${payPeriod}`,
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Payment Date: ${today}`,
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
-
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-
-                            // Weekly Summary
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "WEEKLY SUMMARY:",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Days Worked: _____________",
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Base Weekly Salary: $_____________",
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Total Commission Earned: $${totalCommission.toLocaleString()}`,
-                                        size: 20,
-                                        bold: true,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Total Bonus Amount: $${totalBonus.toLocaleString()}`,
-                                        size: 20,
-                                        bold: true,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
-
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-
-                            // Commission Breakdown Header
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "COMMISSION BREAKDOWN:",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-
-                            // Table
-                            new docx.Table({
-                                rows: [
-                                    new docx.TableRow({
-                                        children: [
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: "Date", bold: true })],
-                                                })],
-                                                width: { size: 20, type: docx.WidthType.PERCENTAGE },
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: "Account #", bold: true })],
-                                                })],
-                                                width: { size: 30, type: docx.WidthType.PERCENTAGE },
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: "Commission", bold: true })],
-                                                })],
-                                                width: { size: 25, type: docx.WidthType.PERCENTAGE },
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: "Bonus", bold: true })],
-                                                })],
-                                                width: { size: 25, type: docx.WidthType.PERCENTAGE },
-                                            }),
-                                        ],
-                                    }),
-                                    // Data rows
-                                    ...agent.map(item => new docx.TableRow({
-                                        children: [
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: item.date })],
-                                                })],
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: item.accountNum })],
-                                                })],
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: `$${item.paymentAmount.toLocaleString()}` })],
-                                                })],
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: `$${item.bonusAmount}` })],
-                                                })],
-                                            }),
-                                        ],
-                                    }))
-                                ],
-                                width: { size: 100, type: docx.WidthType.PERCENTAGE },
-                            }),
-
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { before: 400, after: 200 },
-                            }),
-
-                            // Additional Bonuses
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "ADDITIONAL BONUSES: (Manual Entry)",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Description: _________________________ Amount: $_______ Date: _________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Description: _________________________ Amount: $_______ Date: _________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Description: _________________________ Amount: $_______ Date: _________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Description: _________________________ Amount: $_______ Date: _________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
-
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-
-                            // Total
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "TOTAL WEEKLY PAY: $[Base + Commission + Bonuses + Manual]",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
-
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-
-                            // Signature Section
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "AGENT ACKNOWLEDGMENT:",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "I acknowledge receipt of the above commission payment:",
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Agent Name: _____________________________ Date: ____________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Agent Signature: _________________________________________________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 600 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Manager Signature: _____________________________ Date: ____________",
-                                        size: 18,
-                                    }),
-                                ],
-                            }),
-                        ],
-                    }],
-                });
-
-                // Generate and download
-                const blob = await docx.Packer.toBlob(doc);
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Agent_Report_${agentName}_${today.replace(/\//g, '-')}.docx`;
-                a.click();
-                URL.revokeObjectURL(url);
-
-            } catch (error) {
-                console.error('Error generating DOCX:', error);
-                alert('Error generating document. Please try again.');
-            }
-        }
-
-        async function downloadAllReports() {
-            const agents = Object.keys(agentData);
-            if (agents.length === 0) {
-                alert('No agent data available');
-                return;
-            }
-
-            for (let i = 0; i < agents.length; i++) {
-                await downloadIndividualReport(agents[i]);
-                // Add delay between downloads
-                if (i < agents.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            }
-        }
-
-        // Original summary download functionality
-        document.getElementById('downloadBtn').addEventListener('click', downloadSummaryReport);
-
-        function downloadSummaryReport() {
+        function downloadReport() {
             const teamName = selectedTeam.charAt(0).toUpperCase() + selectedTeam.slice(1);
             const date = new Date().toLocaleDateString();
             
