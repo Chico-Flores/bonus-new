@@ -549,7 +549,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.2/docx.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
     <script>
         let selectedTeam = null;
         let calculatedBonuses = [];
@@ -819,6 +819,12 @@
         async function downloadIndividualReport(agentName) {
             if (!agentData[agentName]) {
                 alert('No data found for selected agent');
+                return;
+            }
+
+            // Check if docx library is loaded
+            if (typeof docx === 'undefined') {
+                alert('DOCX library not loaded. Please refresh the page and try again.');
                 return;
             }
 
