@@ -496,7 +496,7 @@
             </div>
 
             <div class="individual-download-section" id="individualDownloadSection">
-                <h3>⚡ Download Individual Agent Reports (DOCX)</h3>
+                <h3>⚡ Download Individual Agent Reports (HTML)</h3>
                 <div class="agent-selector">
                     <select id="agentSelect">
                         <option value="">Select Agent...</option>
@@ -815,15 +815,9 @@
             });
         }
 
-        async function downloadIndividualReport(agentName) {
+        function downloadIndividualReport(agentName) {
             if (!agentData[agentName]) {
                 alert('No data found for selected agent');
-                return;
-            }
-
-            // Check if docx library is loaded
-            if (typeof docx === 'undefined') {
-                alert('DOCX library not loaded. Please refresh the page and try again.');
                 return;
             }
 
@@ -833,366 +827,300 @@
             const totalBonus = agent.reduce((sum, item) => sum + item.bonusAmount, 0);
             const today = new Date().toLocaleDateString();
 
-            try {
-                // Create DOCX document
-                const doc = new docx.Document({
-                    sections: [{
-                        properties: {},
-                        children: [
-                            // Header
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "THE POWERHOUZE GROUP",
-                                        bold: true,
-                                        size: 32,
-                                    }),
-                                ],
-                                alignment: docx.AlignmentType.CENTER,
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Individual Agent Commission Report",
-                                        bold: true,
-                                        size: 24,
-                                    }),
-                                ],
-                                alignment: docx.AlignmentType.CENTER,
-                                spacing: { after: 400 },
-                            }),
+            // Create commission breakdown table
+            let commissionTable = '';
+            agent.forEach(item => {
+                commissionTable += `
+                    <tr>
+                        <td>${item.date}</td>
+                        <td>${item.accountNum}</td>
+                        <td>$${item.paymentAmount.toLocaleString()}</td>
+                        <td><strong>$${item.bonusAmount}</strong></td>
+                    </tr>
+                `;
+            });
 
-                            // Agent Info
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Agent: ${agentName}`,
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Pay Period: ${payPeriod}`,
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Payment Date: ${today}`,
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
+            const html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Agent Report - ${agentName}</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 40px; 
+                            line-height: 1.6; 
+                            color: #333;
+                        }
+                        .header { 
+                            text-align: center; 
+                            margin-bottom: 40px; 
+                            border-bottom: 3px solid #1e40af; 
+                            padding-bottom: 20px; 
+                        }
+                        .header h1 { 
+                            color: #1e40af; 
+                            font-size: 28px; 
+                            margin-bottom: 10px; 
+                            font-weight: bold;
+                        }
+                        .header h2 { 
+                            color: #3b82f6; 
+                            font-size: 20px; 
+                            margin-bottom: 20px; 
+                        }
+                        .agent-info { 
+                            background: #f8fafc; 
+                            padding: 20px; 
+                            border-radius: 10px; 
+                            margin-bottom: 30px; 
+                            border-left: 5px solid #fbbf24;
+                        }
+                        .agent-info h3 { 
+                            color: #1e40af; 
+                            margin-bottom: 15px; 
+                            font-size: 18px;
+                        }
+                        .info-row { 
+                            margin-bottom: 10px; 
+                            font-size: 16px;
+                        }
+                        .separator { 
+                            border-top: 2px solid #e2e8f0; 
+                            margin: 30px 0; 
+                        }
+                        .summary-section { 
+                            background: #eff6ff; 
+                            padding: 25px; 
+                            border-radius: 10px; 
+                            margin-bottom: 30px; 
+                            border: 2px solid #3b82f6;
+                        }
+                        .summary-section h3 { 
+                            color: #1e40af; 
+                            margin-bottom: 20px; 
+                            font-size: 20px;
+                            font-weight: bold;
+                        }
+                        .summary-row { 
+                            margin-bottom: 15px; 
+                            font-size: 16px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        }
+                        .summary-row.input-row {
+                            border-bottom: 1px dotted #666;
+                            padding-bottom: 8px;
+                        }
+                        .calculated { 
+                            font-weight: bold; 
+                            color: #059669; 
+                        }
+                        table { 
+                            width: 100%; 
+                            border-collapse: collapse; 
+                            margin: 20px 0; 
+                            background: white;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+                        th, td { 
+                            border: 1px solid #e2e8f0; 
+                            padding: 12px; 
+                            text-align: left; 
+                        }
+                        th { 
+                            background: #1e40af; 
+                            color: white; 
+                            font-weight: bold;
+                        }
+                        tr:nth-child(even) { 
+                            background: #f8fafc; 
+                        }
+                        .bonus-section {
+                            background: #fef3c7;
+                            padding: 25px;
+                            border-radius: 10px;
+                            margin: 30px 0;
+                            border: 2px solid #fbbf24;
+                        }
+                        .bonus-section h3 {
+                            color: #92400e;
+                            margin-bottom: 20px;
+                            font-size: 18px;
+                        }
+                        .bonus-row {
+                            margin-bottom: 15px;
+                            padding-bottom: 10px;
+                            border-bottom: 1px dotted #d97706;
+                            font-size: 16px;
+                        }
+                        .total-section {
+                            background: #dcfce7;
+                            padding: 25px;
+                            border-radius: 10px;
+                            margin: 30px 0;
+                            border: 3px solid #059669;
+                            text-align: center;
+                        }
+                        .total-section h3 {
+                            color: #059669;
+                            font-size: 24px;
+                            margin-bottom: 10px;
+                        }
+                        .signature-section { 
+                            margin-top: 50px; 
+                            border-top: 3px solid #e2e8f0; 
+                            padding-top: 30px; 
+                        }
+                        .signature-section h3 {
+                            color: #1e40af;
+                            margin-bottom: 20px;
+                            font-size: 20px;
+                        }
+                        .signature-row { 
+                            margin: 30px 0;
+                            display: flex;
+                            justify-content: space-between;
+                        }
+                        .signature-box { 
+                            width: 45%;
+                        }
+                        .signature-line { 
+                            border-bottom: 2px solid #000; 
+                            height: 40px; 
+                            margin-bottom: 8px; 
+                        }
+                        .signature-label {
+                            font-weight: bold;
+                            color: #666;
+                        }
+                        @media print {
+                            body { margin: 20px; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>⚡ THE POWERHOUZE GROUP</h1>
+                        <h2>Individual Agent Commission Report</h2>
+                    </div>
 
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
+                    <div class="agent-info">
+                        <h3>Agent Information</h3>
+                        <div class="info-row"><strong>Agent:</strong> ${agentName}</div>
+                        <div class="info-row"><strong>Pay Period:</strong> ${payPeriod}</div>
+                        <div class="info-row"><strong>Payment Date:</strong> ${today}</div>
+                    </div>
 
-                            // Weekly Summary
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "WEEKLY SUMMARY:",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Days Worked: _____________",
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Base Weekly Salary: $_____________",
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Total Commission Earned: $${totalCommission.toLocaleString()}`,
-                                        size: 20,
-                                        bold: true,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: `Total Bonus Amount: $${totalBonus.toLocaleString()}`,
-                                        size: 20,
-                                        bold: true,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
+                    <div class="summary-section">
+                        <h3>WEEKLY SUMMARY</h3>
+                        <div class="summary-row input-row">
+                            <span>Days Worked:</span>
+                            <span>_____________</span>
+                        </div>
+                        <div class="summary-row input-row">
+                            <span>Base Weekly Salary:</span>
+                            <span>$_____________</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Commission Earned:</span>
+                            <span class="calculated">$${totalCommission.toLocaleString()}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Bonus Amount:</span>
+                            <span class="calculated">$${totalBonus.toLocaleString()}</span>
+                        </div>
+                    </div>
 
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
+                    <div class="separator"></div>
 
-                            // Commission Breakdown Header
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "COMMISSION BREAKDOWN:",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
+                    <h3 style="color: #1e40af; margin-bottom: 20px; font-size: 20px;">COMMISSION BREAKDOWN</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Account #</th>
+                                <th>Commission</th>
+                                <th>Bonus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${commissionTable}
+                        </tbody>
+                    </table>
 
-                            // Table
-                            new docx.Table({
-                                rows: [
-                                    new docx.TableRow({
-                                        children: [
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: "Date", bold: true })],
-                                                })],
-                                                width: { size: 20, type: docx.WidthType.PERCENTAGE },
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: "Account #", bold: true })],
-                                                })],
-                                                width: { size: 30, type: docx.WidthType.PERCENTAGE },
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: "Commission", bold: true })],
-                                                })],
-                                                width: { size: 25, type: docx.WidthType.PERCENTAGE },
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: "Bonus", bold: true })],
-                                                })],
-                                                width: { size: 25, type: docx.WidthType.PERCENTAGE },
-                                            }),
-                                        ],
-                                    }),
-                                    // Data rows
-                                    ...agent.map(item => new docx.TableRow({
-                                        children: [
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: item.date })],
-                                                })],
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: item.accountNum })],
-                                                })],
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: `$${item.paymentAmount.toLocaleString()}` })],
-                                                })],
-                                            }),
-                                            new docx.TableCell({
-                                                children: [new docx.Paragraph({
-                                                    children: [new docx.TextRun({ text: `$${item.bonusAmount}` })],
-                                                })],
-                                            }),
-                                        ],
-                                    }))
-                                ],
-                                width: { size: 100, type: docx.WidthType.PERCENTAGE },
-                            }),
+                    <div class="bonus-section">
+                        <h3>ADDITIONAL BONUSES (Manual Entry)</h3>
+                        <div class="bonus-row">
+                            Description: _________________________ Amount: $_______ Date: _________
+                        </div>
+                        <div class="bonus-row">
+                            Description: _________________________ Amount: $_______ Date: _________
+                        </div>
+                        <div class="bonus-row">
+                            Description: _________________________ Amount: $_______ Date: _________
+                        </div>
+                        <div class="bonus-row">
+                            Description: _________________________ Amount: $_______ Date: _________
+                        </div>
+                    </div>
 
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { before: 400, after: 200 },
-                            }),
+                    <div class="total-section">
+                        <h3>TOTAL WEEKLY PAY</h3>
+                        <p style="font-size: 18px; margin: 0;">$[Base + Commission + Bonuses + Manual] = $__________</p>
+                    </div>
 
-                            // Additional Bonuses
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "ADDITIONAL BONUSES: (Manual Entry)",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Description: _________________________ Amount: $_______ Date: _________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Description: _________________________ Amount: $_______ Date: _________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Description: _________________________ Amount: $_______ Date: _________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Description: _________________________ Amount: $_______ Date: _________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
+                    <div class="signature-section">
+                        <h3>AGENT ACKNOWLEDGMENT</h3>
+                        <p style="margin-bottom: 30px; font-size: 16px;">I acknowledge receipt of the above commission payment:</p>
+                        
+                        <div class="signature-row">
+                            <div class="signature-box">
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Agent Name</div>
+                            </div>
+                            <div class="signature-box">
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Date</div>
+                            </div>
+                        </div>
 
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
+                        <div class="signature-row">
+                            <div class="signature-box">
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Agent Signature</div>
+                            </div>
+                            <div class="signature-box">
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Date</div>
+                            </div>
+                        </div>
 
-                            // Total
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "TOTAL WEEKLY PAY: $[Base + Commission + Bonuses + Manual]",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
+                        <div class="signature-row">
+                            <div class="signature-box">
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Manager Signature</div>
+                            </div>
+                            <div class="signature-box">
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Date</div>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
 
-                            // Separator
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-                                        size: 16,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-
-                            // Signature Section
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "AGENT ACKNOWLEDGMENT:",
-                                        bold: true,
-                                        size: 22,
-                                    }),
-                                ],
-                                spacing: { after: 200 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "I acknowledge receipt of the above commission payment:",
-                                        size: 20,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Agent Name: _____________________________ Date: ____________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 400 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Agent Signature: _________________________________________________",
-                                        size: 18,
-                                    }),
-                                ],
-                                spacing: { after: 600 },
-                            }),
-                            new docx.Paragraph({
-                                children: [
-                                    new docx.TextRun({
-                                        text: "Manager Signature: _____________________________ Date: ____________",
-                                        size: 18,
-                                    }),
-                                ],
-                            }),
-                        ],
-                    }],
-                });
-
-                // Generate and download
-                const blob = await docx.Packer.toBlob(doc);
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Agent_Report_${agentName}_${today.replace(/\//g, '-')}.docx`;
-                a.click();
-                URL.revokeObjectURL(url);
-
-            } catch (error) {
-                console.error('Error generating DOCX:', error);
-                alert('Error generating document. Please try again.');
-            }
+            // Create and download the HTML file
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Agent_Report_${agentName}_${today.replace(/\//g, '-')}.html`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         async function downloadAllReports() {
@@ -1203,7 +1131,7 @@
             }
 
             for (let i = 0; i < agents.length; i++) {
-                await downloadIndividualReport(agents[i]);
+                downloadIndividualReport(agents[i]);
                 // Add delay between downloads
                 if (i < agents.length - 1) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
