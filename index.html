@@ -496,7 +496,7 @@
             </div>
 
             <div class="individual-download-section" id="individualDownloadSection">
-                <h3>⚡ Download Individual Agent Reports (TXT)</h3>
+                <h3>⚡ Download Individual Agent Reports (HTML/Word)</h3>
                 <div class="agent-selector">
                     <select id="agentSelect">
                         <option value="">Select Agent...</option>
@@ -742,6 +742,20 @@
             return 0;
         }
 
+        function extractInitials(name) {
+            if (!name) return '';
+            const words = name.trim().split(/\s+/);
+            return words.map(word => word.charAt(0).toUpperCase()).join('');
+        }
+
+        function formatDateMMDDYYYY(date) {
+            const d = new Date(date);
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const year = d.getFullYear();
+            return month + '/' + day + '/' + year;
+        }
+
         function populateAgentSelector() {
             const agentSelect = document.getElementById('agentSelect');
             agentSelect.innerHTML = '<option value="">Select Agent...</option>';
@@ -792,63 +806,163 @@
             const payPeriod = payPeriodData[agentName] || 'N/A';
             const totalCommission = agent.reduce((sum, item) => sum + item.paymentAmount, 0);
             const totalBonus = agent.reduce((sum, item) => sum + item.bonusAmount, 0);
-            const today = new Date().toLocaleDateString();
+            const today = new Date();
+            const formattedDate = formatDateMMDDYYYY(today);
+            const agentInitials = extractInitials(agentName);
 
-            let txtContent = '';
-            txtContent += '===============================================\n';
-            txtContent += '         THE POWERHOUZE GROUP\n';
-            txtContent += '    Individual Agent Commission Report\n';
-            txtContent += '===============================================\n\n';
-            
-            txtContent += 'AGENT INFORMATION\n';
-            txtContent += '-----------------\n';
-            txtContent += 'Agent: ' + agentName + '\n';
-            txtContent += 'Pay Period: ' + payPeriod + '\n';
-            txtContent += 'Payment Date: ' + today + '\n\n';
-            
-            txtContent += 'WEEKLY SUMMARY\n';
-            txtContent += '--------------\n';
-            txtContent += 'Days Worked: _____________\n';
-            txtContent += 'Base Weekly Salary: $_____________\n';
-            txtContent += 'Total Commission Earned: $' + totalCommission.toLocaleString() + '\n';
-            txtContent += 'Total Bonus Amount: $' + totalBonus.toLocaleString() + '\n\n';
-            
-            txtContent += 'COMMISSION BREAKDOWN\n';
-            txtContent += '--------------------\n';
-            txtContent += 'Date         Account #     Commission    Bonus\n';
-            txtContent += '--------------------------------------------\n';
+            // Generate HTML content
+            let htmlContent = '<!DOCTYPE html>\n<html>\n<head>\n';
+            htmlContent += '<meta charset="UTF-8">\n';
+            htmlContent += '<meta name="ProgId" content="Word.Document">\n';
+            htmlContent += '<meta name="Generator" content="Microsoft Word">\n';
+            htmlContent += '<meta name="Originator" content="Microsoft Word">\n';
+            htmlContent += '<title>THE POWERHOUZE GROUP - Agent Payroll Sheet</title>\n';
+            htmlContent += '<style>\n';
+            htmlContent += 'body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }\n';
+            htmlContent += '.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1e40af; padding-bottom: 20px; }\n';
+            htmlContent += '.header h1 { color: #1e40af; margin: 10px 0; font-size: 24px; }\n';
+            htmlContent += '.header h2 { color: #3b82f6; margin: 5px 0; font-size: 18px; }\n';
+            htmlContent += '.section { margin-bottom: 25px; }\n';
+            htmlContent += '.section-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #1e40af; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }\n';
+            htmlContent += 'table { width: 100%; border-collapse: collapse; margin: 15px 0; }\n';
+            htmlContent += 'td { padding: 8px; border: 1px solid #e2e8f0; }\n';
+            htmlContent += 'td.label { font-weight: bold; width: 200px; background-color: #f8fafc; }\n';
+            htmlContent += 'td.value { }\n';
+            htmlContent += '.editable { border: 1px solid #cbd5e1; padding: 5px; min-height: 20px; background-color: #ffffff; }\n';
+            htmlContent += '.bonus-table { width: 100%; border-collapse: collapse; margin: 15px 0; }\n';
+            htmlContent += '.bonus-table th { background-color: #1e40af; color: white; padding: 10px; text-align: left; border: 1px solid #1e40af; }\n';
+            htmlContent += '.bonus-table td { padding: 8px; border: 1px solid #e2e8f0; }\n';
+            htmlContent += '.empty-row { height: 30px; }\n';
+            htmlContent += '.signature-section { margin-top: 40px; border-top: 2px solid #e2e8f0; padding-top: 20px; }\n';
+            htmlContent += '.signature-box { display: inline-block; margin-right: 50px; margin-bottom: 20px; }\n';
+            htmlContent += '.signature-line { border-bottom: 2px solid #000; width: 250px; height: 30px; margin-bottom: 5px; }\n';
+            htmlContent += '</style>\n';
+            htmlContent += '</head>\n<body>\n';
+
+            // Header
+            htmlContent += '<div class="header">\n';
+            htmlContent += '<h1>THE POWERHOUZE GROUP</h1>\n';
+            htmlContent += '<h2>Individual Agent Commission Report</h2>\n';
+            htmlContent += '</div>\n';
+
+            // Agent Information
+            htmlContent += '<div class="section">\n';
+            htmlContent += '<div class="section-title">AGENT INFORMATION</div>\n';
+            htmlContent += '<table>\n';
+            htmlContent += '<tr><td class="label">Agent:</td><td class="value">' + agentName + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Agent Initials:</td><td class="value">' + agentInitials + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Pay Period:</td><td class="value">' + payPeriod + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Payment Date:</td><td class="value">' + formattedDate + '</td></tr>\n';
+            htmlContent += '</table>\n';
+            htmlContent += '</div>\n';
+
+            // Weekly Summary
+            htmlContent += '<div class="section">\n';
+            htmlContent += '<div class="section-title">WEEKLY SUMMARY</div>\n';
+            htmlContent += '<table>\n';
+            htmlContent += '<tr><td class="label">Days Worked:</td><td class="value"><div class="editable" contenteditable="true"></div></td></tr>\n';
+            htmlContent += '<tr><td class="label">Base Weekly Salary:</td><td class="value">$_____________</td></tr>\n';
+            htmlContent += '<tr><td class="label">Total Commission Earned:</td><td class="value">$' + totalCommission.toLocaleString() + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Total Bonus Amount:</td><td class="value">$' + totalBonus.toLocaleString() + '</td></tr>\n';
+            htmlContent += '</table>\n';
+            htmlContent += '</div>\n';
+
+            // Commission Breakdown
+            htmlContent += '<div class="section">\n';
+            htmlContent += '<div class="section-title">COMMISSION BREAKDOWN</div>\n';
+            htmlContent += '<table class="bonus-table">\n';
+            htmlContent += '<thead><tr><th>Date</th><th>Account #</th><th>Commission</th><th>Bonus</th></tr></thead>\n';
+            htmlContent += '<tbody>\n';
             
             agent.forEach(item => {
-                const date = (item.date || '').padEnd(12);
-                const account = (item.accountNum || '').padEnd(13);
-                const commission = ('$' + item.paymentAmount.toLocaleString()).padEnd(13);
-                const bonus = '$' + item.bonusAmount;
-                txtContent += date + ' ' + account + ' ' + commission + ' ' + bonus + '\n';
+                let date = item.date || '';
+                if (date) {
+                    try {
+                        const dateObj = new Date(item.date);
+                        if (!isNaN(dateObj.getTime())) {
+                            date = formatDateMMDDYYYY(dateObj);
+                        }
+                    } catch (e) {
+                        // If date parsing fails, use the original string
+                        date = item.date.toString();
+                    }
+                }
+                htmlContent += '<tr>\n';
+                htmlContent += '<td>' + date + '</td>\n';
+                htmlContent += '<td>' + (item.accountNum || '') + '</td>\n';
+                htmlContent += '<td>$' + item.paymentAmount.toLocaleString() + '</td>\n';
+                htmlContent += '<td>$' + item.bonusAmount + '</td>\n';
+                htmlContent += '</tr>\n';
             });
             
-            txtContent += '\n\nADDITIONAL BONUSES (Manual Entry)\n';
-            txtContent += '----------------------------------\n';
-            txtContent += 'Description: _________________________ Amount: $_______ Date: _________\n';
-            txtContent += 'Description: _________________________ Amount: $_______ Date: _________\n';
-            txtContent += 'Description: _________________________ Amount: $_______ Date: _________\n';
-            txtContent += 'Description: _________________________ Amount: $_______ Date: _________\n\n';
-            
-            txtContent += 'TOTAL WEEKLY PAY\n';
-            txtContent += '================\n';
-            txtContent += '$[Base + Commission + Bonuses + Manual] = $__________\n\n\n';
-            
-            txtContent += 'AGENT ACKNOWLEDGMENT\n';
-            txtContent += '====================\n';
-            txtContent += 'I acknowledge receipt of the above commission payment:\n\n';
-            txtContent += 'Agent Name: _______________________________     Date: _______________\n\n';
-            txtContent += 'Agent Signature: ___________________________     Date: _______________\n\n';
-            txtContent += 'Manager Signature: _________________________     Date: _______________\n\n';
+            htmlContent += '</tbody>\n';
+            htmlContent += '</table>\n';
+            htmlContent += '</div>\n';
 
-            const blob = new Blob([txtContent], { type: 'text/plain' });
+            // Additional Bonuses (3 empty rows)
+            htmlContent += '<div class="section">\n';
+            htmlContent += '<div class="section-title">ADDITIONAL BONUSES (Manual Entry)</div>\n';
+            htmlContent += '<table class="bonus-table">\n';
+            htmlContent += '<thead><tr><th>Description</th><th>Amount</th><th>Date</th></tr></thead>\n';
+            htmlContent += '<tbody>\n';
+            for (let i = 0; i < 3; i++) {
+                htmlContent += '<tr>\n';
+                htmlContent += '<td><div class="editable" contenteditable="true"></div></td>\n';
+                htmlContent += '<td><div class="editable" contenteditable="true"></div></td>\n';
+                htmlContent += '<td><div class="editable" contenteditable="true"></div></td>\n';
+                htmlContent += '</tr>\n';
+            }
+            htmlContent += '</tbody>\n';
+            htmlContent += '</table>\n';
+            htmlContent += '</div>\n';
+
+            // Total Weekly Pay
+            htmlContent += '<div class="section">\n';
+            htmlContent += '<div class="section-title">TOTAL WEEKLY PAY</div>\n';
+            htmlContent += '<table>\n';
+            htmlContent += '<tr><td class="label">Total:</td><td class="value">$[Base + Commission + Bonuses + Manual] = $__________</td></tr>\n';
+            htmlContent += '</table>\n';
+            htmlContent += '</div>\n';
+
+            // Agent Acknowledgment
+            htmlContent += '<div class="signature-section">\n';
+            htmlContent += '<div class="section-title">AGENT ACKNOWLEDGMENT</div>\n';
+            htmlContent += '<p>I acknowledge receipt of the above commission payment:</p>\n';
+            htmlContent += '<div class="signature-box">\n';
+            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<p>Agent Name</p>\n';
+            htmlContent += '</div>\n';
+            htmlContent += '<div class="signature-box">\n';
+            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<p>Date</p>\n';
+            htmlContent += '</div>\n';
+            htmlContent += '<br><br>\n';
+            htmlContent += '<div class="signature-box">\n';
+            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<p>Agent Signature</p>\n';
+            htmlContent += '</div>\n';
+            htmlContent += '<div class="signature-box">\n';
+            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<p>Date</p>\n';
+            htmlContent += '</div>\n';
+            htmlContent += '<br><br>\n';
+            htmlContent += '<div class="signature-box">\n';
+            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<p>Manager Signature</p>\n';
+            htmlContent += '</div>\n';
+            htmlContent += '<div class="signature-box">\n';
+            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<p>Date</p>\n';
+            htmlContent += '</div>\n';
+            htmlContent += '</div>\n';
+
+            htmlContent += '</body>\n</html>';
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = "Agent_Report_" + agentName + "_" + today.replace(/\//g, '-') + ".txt";
+            a.download = "Agent_Payroll_" + agentName.replace(/\s+/g, '_') + "_" + formattedDate.replace(/\//g, '-') + ".html";
             a.click();
             URL.revokeObjectURL(url);
         }
