@@ -808,7 +808,6 @@
             const totalBonus = agent.reduce((sum, item) => sum + item.bonusAmount, 0);
             const today = new Date();
             const formattedDate = formatDateMMDDYYYY(today);
-            const agentInitials = extractInitials(agentName);
 
             // Generate HTML content
             let htmlContent = '<!DOCTYPE html>\n<html>\n<head>\n';
@@ -818,24 +817,28 @@
             htmlContent += '<meta name="Originator" content="Microsoft Word">\n';
             htmlContent += '<title>THE POWERHOUZE GROUP - Agent Payroll Sheet</title>\n';
             htmlContent += '<style>\n';
-            htmlContent += 'body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }\n';
-            htmlContent += '.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1e40af; padding-bottom: 20px; }\n';
-            htmlContent += '.header h1 { color: #1e40af; margin: 10px 0; font-size: 24px; }\n';
-            htmlContent += '.header h2 { color: #3b82f6; margin: 5px 0; font-size: 18px; }\n';
-            htmlContent += '.section { margin-bottom: 25px; }\n';
-            htmlContent += '.section-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #1e40af; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }\n';
-            htmlContent += 'table { width: 100%; border-collapse: collapse; margin: 15px 0; }\n';
-            htmlContent += 'td { padding: 8px; border: 1px solid #e2e8f0; }\n';
-            htmlContent += 'td.label { font-weight: bold; width: 200px; background-color: #f8fafc; }\n';
+            htmlContent += '@media print { body { margin: 0.5in; } }\n';
+            htmlContent += 'body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; font-size: 11px; }\n';
+            htmlContent += '.header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #1e40af; padding-bottom: 10px; }\n';
+            htmlContent += '.header h1 { color: #1e40af; margin: 5px 0; font-size: 20px; }\n';
+            htmlContent += '.header h2 { color: #3b82f6; margin: 3px 0; font-size: 14px; }\n';
+            htmlContent += '.two-column { display: table; width: 100%; margin-bottom: 15px; }\n';
+            htmlContent += '.column { display: table-cell; width: 50%; vertical-align: top; padding: 0 10px; }\n';
+            htmlContent += '.section { margin-bottom: 15px; }\n';
+            htmlContent += '.section-title { font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #1e40af; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }\n';
+            htmlContent += 'table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11px; }\n';
+            htmlContent += 'td { padding: 5px; border: 1px solid #e2e8f0; }\n';
+            htmlContent += 'td.label { font-weight: bold; width: 140px; background-color: #f8fafc; }\n';
             htmlContent += 'td.value { }\n';
-            htmlContent += '.editable { border: 1px solid #cbd5e1; padding: 5px; min-height: 20px; background-color: #ffffff; }\n';
-            htmlContent += '.bonus-table { width: 100%; border-collapse: collapse; margin: 15px 0; }\n';
-            htmlContent += '.bonus-table th { background-color: #1e40af; color: white; padding: 10px; text-align: left; border: 1px solid #1e40af; }\n';
-            htmlContent += '.bonus-table td { padding: 8px; border: 1px solid #e2e8f0; }\n';
-            htmlContent += '.empty-row { height: 30px; }\n';
-            htmlContent += '.signature-section { margin-top: 40px; border-top: 2px solid #e2e8f0; padding-top: 20px; }\n';
-            htmlContent += '.signature-box { display: inline-block; margin-right: 50px; margin-bottom: 20px; }\n';
-            htmlContent += '.signature-line { border-bottom: 2px solid #000; width: 250px; height: 30px; margin-bottom: 5px; }\n';
+            htmlContent += '[contenteditable="true"] { border: 1px solid #cbd5e1; padding: 3px; min-height: 18px; background-color: #ffffff; outline: none; }\n';
+            htmlContent += '[contenteditable="true"]:focus { border-color: #3b82f6; background-color: #f0f9ff; }\n';
+            htmlContent += '.bonus-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }\n';
+            htmlContent += '.bonus-table th { background-color: #1e40af; color: white; padding: 6px; text-align: left; border: 1px solid #1e40af; font-size: 11px; }\n';
+            htmlContent += '.bonus-table td { padding: 5px; border: 1px solid #e2e8f0; }\n';
+            htmlContent += '.bonus-table td[contenteditable="true"] { min-height: 16px; padding: 3px; }\n';
+            htmlContent += '.signature-section { margin-top: 20px; border-top: 2px solid #e2e8f0; padding-top: 15px; }\n';
+            htmlContent += '.signature-box { display: inline-block; margin-right: 40px; margin-bottom: 15px; }\n';
+            htmlContent += '.signature-line { border-bottom: 2px solid #000; width: 200px; height: 25px; margin-bottom: 3px; }\n';
             htmlContent += '</style>\n';
             htmlContent += '</head>\n<body>\n';
 
@@ -845,31 +848,39 @@
             htmlContent += '<h2>Individual Agent Commission Report</h2>\n';
             htmlContent += '</div>\n';
 
-            // Agent Information
+            // Agent Information and Weekly Summary side by side
+            htmlContent += '<div class="two-column">\n';
+            
+            // Agent Information (left column)
+            htmlContent += '<div class="column">\n';
             htmlContent += '<div class="section">\n';
             htmlContent += '<div class="section-title">AGENT INFORMATION</div>\n';
             htmlContent += '<table>\n';
-            htmlContent += '<tr><td class="label">Agent:</td><td class="value">' + agentName + '</td></tr>\n';
-            htmlContent += '<tr><td class="label">Agent Initials:</td><td class="value">' + agentInitials + '</td></tr>\n';
-            htmlContent += '<tr><td class="label">Pay Period:</td><td class="value">' + payPeriod + '</td></tr>\n';
-            htmlContent += '<tr><td class="label">Payment Date:</td><td class="value">' + formattedDate + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Agent:</td><td class="value" contenteditable="true">' + agentName + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Pay Period:</td><td class="value" contenteditable="true">' + payPeriod + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Payment Date:</td><td class="value" contenteditable="true">' + formattedDate + '</td></tr>\n';
             htmlContent += '</table>\n';
             htmlContent += '</div>\n';
-
-            // Weekly Summary
+            htmlContent += '</div>\n';
+            
+            // Weekly Summary (right column)
+            htmlContent += '<div class="column">\n';
             htmlContent += '<div class="section">\n';
             htmlContent += '<div class="section-title">WEEKLY SUMMARY</div>\n';
             htmlContent += '<table>\n';
-            htmlContent += '<tr><td class="label">Days Worked:</td><td class="value"><div class="editable" contenteditable="true"></div></td></tr>\n';
-            htmlContent += '<tr><td class="label">Base Weekly Salary:</td><td class="value">$_____________</td></tr>\n';
-            htmlContent += '<tr><td class="label">Total Commission Earned:</td><td class="value">$' + totalCommission.toLocaleString() + '</td></tr>\n';
-            htmlContent += '<tr><td class="label">Total Bonus Amount:</td><td class="value">$' + totalBonus.toLocaleString() + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Days Worked:</td><td class="value"><div contenteditable="true"></div></td></tr>\n';
+            htmlContent += '<tr><td class="label">Base Weekly Salary:</td><td class="value" contenteditable="true">$</td></tr>\n';
+            htmlContent += '<tr><td class="label">Total Collected:</td><td class="value" contenteditable="true">$' + totalCommission.toLocaleString() + '</td></tr>\n';
+            htmlContent += '<tr><td class="label">Total Bonus Amount:</td><td class="value" contenteditable="true">$' + totalBonus.toLocaleString() + '</td></tr>\n';
             htmlContent += '</table>\n';
             htmlContent += '</div>\n';
+            htmlContent += '</div>\n';
+            
+            htmlContent += '</div>\n';
 
-            // Commission Breakdown
+            // Bonus Breakdown
             htmlContent += '<div class="section">\n';
-            htmlContent += '<div class="section-title">COMMISSION BREAKDOWN</div>\n';
+            htmlContent += '<div class="section-title">BONUS BREAKDOWN</div>\n';
             htmlContent += '<table class="bonus-table">\n';
             htmlContent += '<thead><tr><th>Date</th><th>Account #</th><th>Commission</th><th>Bonus</th></tr></thead>\n';
             htmlContent += '<tbody>\n';
@@ -888,10 +899,10 @@
                     }
                 }
                 htmlContent += '<tr>\n';
-                htmlContent += '<td>' + date + '</td>\n';
-                htmlContent += '<td>' + (item.accountNum || '') + '</td>\n';
-                htmlContent += '<td>$' + item.paymentAmount.toLocaleString() + '</td>\n';
-                htmlContent += '<td>$' + item.bonusAmount + '</td>\n';
+                htmlContent += '<td contenteditable="true">' + date + '</td>\n';
+                htmlContent += '<td contenteditable="true">' + (item.accountNum || '') + '</td>\n';
+                htmlContent += '<td contenteditable="true">$' + item.paymentAmount.toLocaleString() + '</td>\n';
+                htmlContent += '<td contenteditable="true">$' + item.bonusAmount + '</td>\n';
                 htmlContent += '</tr>\n';
             });
             
@@ -907,9 +918,9 @@
             htmlContent += '<tbody>\n';
             for (let i = 0; i < 3; i++) {
                 htmlContent += '<tr>\n';
-                htmlContent += '<td><div class="editable" contenteditable="true"></div></td>\n';
-                htmlContent += '<td><div class="editable" contenteditable="true"></div></td>\n';
-                htmlContent += '<td><div class="editable" contenteditable="true"></div></td>\n';
+                htmlContent += '<td><div contenteditable="true"></div></td>\n';
+                htmlContent += '<td><div contenteditable="true"></div></td>\n';
+                htmlContent += '<td><div contenteditable="true"></div></td>\n';
                 htmlContent += '</tr>\n';
             }
             htmlContent += '</tbody>\n';
@@ -920,38 +931,38 @@
             htmlContent += '<div class="section">\n';
             htmlContent += '<div class="section-title">TOTAL WEEKLY PAY</div>\n';
             htmlContent += '<table>\n';
-            htmlContent += '<tr><td class="label">Total:</td><td class="value">$[Base + Commission + Bonuses + Manual] = $__________</td></tr>\n';
+            htmlContent += '<tr><td class="label">Total:</td><td class="value" contenteditable="true">[Base Salary + Bonuses] = $</td></tr>\n';
             htmlContent += '</table>\n';
             htmlContent += '</div>\n';
 
             // Agent Acknowledgment
             htmlContent += '<div class="signature-section">\n';
             htmlContent += '<div class="section-title">AGENT ACKNOWLEDGMENT</div>\n';
-            htmlContent += '<p>I acknowledge receipt of the above commission payment:</p>\n';
+            htmlContent += '<p contenteditable="true">I acknowledge receipt of the above commission payment:</p>\n';
             htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
             htmlContent += '<p>Agent Name</p>\n';
             htmlContent += '</div>\n';
             htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
             htmlContent += '<p>Date</p>\n';
             htmlContent += '</div>\n';
             htmlContent += '<br><br>\n';
             htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
             htmlContent += '<p>Agent Signature</p>\n';
             htmlContent += '</div>\n';
             htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
             htmlContent += '<p>Date</p>\n';
             htmlContent += '</div>\n';
             htmlContent += '<br><br>\n';
             htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
             htmlContent += '<p>Manager Signature</p>\n';
             htmlContent += '</div>\n';
             htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line"></div>\n';
+            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
             htmlContent += '<p>Date</p>\n';
             htmlContent += '</div>\n';
             htmlContent += '</div>\n';
