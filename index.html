@@ -839,6 +839,7 @@
             htmlContent += '.signature-section { margin-top: 20px; border-top: 2px solid #e2e8f0; padding-top: 15px; }\n';
             htmlContent += '.signature-box { display: inline-block; margin-right: 40px; margin-bottom: 15px; }\n';
             htmlContent += '.signature-line { border-bottom: 2px solid #000; width: 200px; height: 25px; margin-bottom: 3px; }\n';
+            htmlContent += '.signature-line-simple { border-bottom: 2px solid #000; width: 300px; height: 30px; margin-bottom: 5px; margin-top: 10px; }\n';
             htmlContent += '</style>\n';
             htmlContent += '</head>\n<body>\n';
 
@@ -882,7 +883,7 @@
             htmlContent += '<div class="section">\n';
             htmlContent += '<div class="section-title">BONUS BREAKDOWN</div>\n';
             htmlContent += '<table class="bonus-table">\n';
-            htmlContent += '<thead><tr><th>Date</th><th>Account #</th><th>Commission</th><th>Bonus</th></tr></thead>\n';
+            htmlContent += '<thead><tr><th>Date</th><th>Account #</th><th>Collected</th><th>Bonus</th></tr></thead>\n';
             htmlContent += '<tbody>\n';
             
             agent.forEach(item => {
@@ -912,7 +913,7 @@
 
             // Additional Bonuses (3 empty rows)
             htmlContent += '<div class="section">\n';
-            htmlContent += '<div class="section-title">ADDITIONAL BONUSES (Manual Entry)</div>\n';
+            htmlContent += '<div class="section-title">ADDITIONAL BONUSES</div>\n';
             htmlContent += '<table class="bonus-table">\n';
             htmlContent += '<thead><tr><th>Description</th><th>Amount</th><th>Date</th></tr></thead>\n';
             htmlContent += '<tbody>\n';
@@ -948,22 +949,9 @@
             htmlContent += '<p>Date</p>\n';
             htmlContent += '</div>\n';
             htmlContent += '<br><br>\n';
-            htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
+            htmlContent += '<div style="margin-top: 20px;">\n';
+            htmlContent += '<div class="signature-line-simple" contenteditable="true"></div>\n';
             htmlContent += '<p>Agent Signature</p>\n';
-            htmlContent += '</div>\n';
-            htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
-            htmlContent += '<p>Date</p>\n';
-            htmlContent += '</div>\n';
-            htmlContent += '<br><br>\n';
-            htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
-            htmlContent += '<p>Manager Signature</p>\n';
-            htmlContent += '</div>\n';
-            htmlContent += '<div class="signature-box">\n';
-            htmlContent += '<div class="signature-line" contenteditable="true"></div>\n';
-            htmlContent += '<p>Date</p>\n';
             htmlContent += '</div>\n';
             htmlContent += '</div>\n';
 
