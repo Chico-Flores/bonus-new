@@ -167,7 +167,7 @@
 
         .bonus-structures {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 30px;
             margin-bottom: 30px;
         }
@@ -186,7 +186,7 @@
             text-align: center;
         }
 
-        .structure-card.mexico {
+        .structure-card.tij {
             border-color: #fbbf24;
             background: linear-gradient(135deg, #fffbeb, #fef3c7);
         }
@@ -194,6 +194,11 @@
         .structure-card.opac {
             border-color: #3b82f6;
             background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        }
+
+        .structure-card.rsa {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
         }
 
         .bracket {
@@ -206,8 +211,12 @@
             border-left: 4px solid #3b82f6;
         }
 
-        .mexico .bracket {
+        .tij .bracket {
             border-left-color: #fbbf24;
+        }
+
+        .rsa .bracket {
+            border-left-color: #10b981;
         }
 
         .results-section {
@@ -389,6 +398,12 @@
             font-weight: bold;
         }
 
+        @media (max-width: 1024px) {
+            .bonus-structures {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -416,14 +431,15 @@
             <div class="team-selector">
                 <h2>Select Team for Bonus Calculation</h2>
                 <div class="team-buttons">
-                    <button class="team-btn" data-team="mexico">Mexico Team</button>
+                    <button class="team-btn" data-team="tij">TIJ Team</button>
                     <button class="team-btn" data-team="opac">OPAC Team (Egypt/Philippines)</button>
+                    <button class="team-btn" data-team="rsa">RSA Team</button>
                 </div>
             </div>
 
             <div class="bonus-structures">
-                <div class="structure-card mexico">
-                    <h3>⚡ Mexico Team Bonuses</h3>
+                <div class="structure-card tij">
+                    <h3>⚡ TIJ Team Bonuses</h3>
                     <div class="bracket">
                         <span>$500 - $999</span>
                         <span><strong>$25</strong></span>
@@ -475,6 +491,26 @@
                     <div class="bracket">
                         <span>$4,000+</span>
                         <span><strong>$40</strong></span>
+                    </div>
+                </div>
+
+                <div class="structure-card rsa">
+                    <h3>⚡ RSA Team Bonuses</h3>
+                    <div class="bracket">
+                        <span>$500 - $999</span>
+                        <span><strong>$10</strong></span>
+                    </div>
+                    <div class="bracket">
+                        <span>$1,000 - $1,999</span>
+                        <span><strong>$40</strong></span>
+                    </div>
+                    <div class="bracket">
+                        <span>$2,000 - $3,999</span>
+                        <span><strong>$100</strong></span>
+                    </div>
+                    <div class="bracket">
+                        <span>$4,000+</span>
+                        <span><strong>$150</strong></span>
                     </div>
                 </div>
             </div>
@@ -554,7 +590,7 @@
         let payPeriodData = {};
 
         const bonusStructures = {
-            mexico: [
+            tij: [
                 { min: 500, max: 999, bonus: 25 },
                 { min: 1000, max: 1999, bonus: 50 },
                 { min: 2000, max: 3999, bonus: 100 },
@@ -569,6 +605,12 @@
                 { min: 3000, max: 3499, bonus: 30 },
                 { min: 3500, max: 3999, bonus: 35 },
                 { min: 4000, max: Infinity, bonus: 40 }
+            ],
+            rsa: [
+                { min: 500, max: 999, bonus: 10 },
+                { min: 1000, max: 1999, bonus: 40 },
+                { min: 2000, max: 3999, bonus: 100 },
+                { min: 4000, max: Infinity, bonus: 150 }
             ]
         };
 
